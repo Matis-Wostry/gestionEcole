@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.crea.jee.beans.Uv;
 import com.crea.jee.utils.DBAction;
+import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table uv
@@ -77,6 +78,9 @@ public class UvDao {
 
 	// met à jour le nombre d'heure de cours d'une uv identifiée par son code
 	public static int updateNbhUv(String code, int nbh) {
+		if (!Validation.estPositif(nbh) || !Validation.estDansPlageTinyint(nbh)) {
+			return -3;
+		}
 		int result = -1;
 		String request = "UPDATE uv SET nbh = ? WHERE code = ?";
 		DBAction.DBConnexion();
@@ -94,6 +98,9 @@ public class UvDao {
 
 	// met à jour le coordinateur d'une uv identifiée par son code
 	public static int updateCoordUv(String code, String coord) {
+		if (!Validation.longueurValide(coord, 255)) {
+			return -3;
+		}
 		int result = -1;
 		String request = "UPDATE uv SET coord = ? WHERE code = ?";
 		DBAction.DBConnexion();

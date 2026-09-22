@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.crea.jee.beans.Chambre;
 import com.crea.jee.utils.DBAction;
+import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table chambre
@@ -115,6 +116,9 @@ public class ChambreDao {
 
 	// met à jour le prix d'une chambre identifiée par son numéro
 	public static int updatePrixChambre(int no, float prix) {
+		if (!Validation.estPositif(prix)) {
+			return -3;
+		}
 		int result = -1;
 		String request = "UPDATE chambre SET prix = ? WHERE no = ?";
 		DBAction.DBConnexion();
@@ -132,6 +136,9 @@ public class ChambreDao {
 
 	// ajoute une nouvelle chambre, sans occupant
 	public static int addChambre(Chambre new_chambre) {
+		if (!Validation.estPositif(new_chambre.getNo()) || !Validation.estPositif(new_chambre.getPrix())) {
+			return -3;
+		}
 		int result = -1;
 		String req = "INSERT INTO chambre (no, num, prix) VALUES (?, NULL, ?)";
 		DBAction.DBConnexion();

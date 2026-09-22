@@ -16,5 +16,14 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library name="junit-platform-console-standalone">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/junit-platform-console-standalone-1.10.2.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

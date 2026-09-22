@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.crea.jee.beans.Eleve;
 import com.crea.jee.utils.DBAction;
+import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table eleve
@@ -135,6 +136,9 @@ public class EleveDao {
 
 	// met à jour l'adresse d'un élève identifié par son numéro
 	public static int updateAdresseEleve(String num, String adresse) {
+		if (!Validation.estValide(adresse, 200)) {
+			return -3;
+		}
 		int result = -1;
 		String request = "UPDATE eleve SET adresse = ? WHERE num = ?";
 		DBAction.DBConnexion();
@@ -152,6 +156,9 @@ public class EleveDao {
 
 	// met à jour le numéro d'un élève (répercuté automatiquement sur chambre/livre/inscrit via ON UPDATE CASCADE)
 	public static int updateNumEleve(String ancienNum, String nouveauNum) {
+		if (!Validation.estValide(nouveauNum, 100)) {
+			return -3;
+		}
 		int result = -1;
 		String request = "UPDATE eleve SET num = ? WHERE num = ?";
 		DBAction.DBConnexion();
@@ -172,6 +179,11 @@ public class EleveDao {
 
 	// ajoute un nouvel élève, sans chambre attribuée
 	public static int addEleve(Eleve new_eleve) {
+		if (!Validation.estValide(new_eleve.getNum(), 100) || !Validation.estValide(new_eleve.getNom(), 50)
+				|| !Validation.longueurValide(new_eleve.getAdresse(), 200) || !Validation.estPositif(new_eleve.getAge())
+				|| !Validation.estDansPlageTinyint(new_eleve.getAge())) {
+			return -3;
+		}
 		int result = -1;
 		String req = "INSERT INTO eleve (num, no, nom, age, adresse) VALUES (?, NULL, ?, ?, ?)";
 		DBAction.DBConnexion();

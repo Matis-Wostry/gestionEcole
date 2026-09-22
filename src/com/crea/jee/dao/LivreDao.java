@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.crea.jee.beans.Livre;
 import com.crea.jee.utils.DBAction;
+import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table livre
@@ -100,6 +101,9 @@ public class LivreDao {
 
 	// met à jour le titre d'un livre identifié par sa cote
 	public static int updateTitreLivre(String cote, String titre) {
+		if (!Validation.estValide(titre, 100)) {
+			return -3;
+		}
 		int result = -1;
 		String request = "UPDATE livre SET titre = ? WHERE cote = ?";
 		DBAction.DBConnexion();
@@ -117,6 +121,9 @@ public class LivreDao {
 
 	// ajoute un nouveau livre, disponible (sans emprunteur)
 	public static int addLivre(Livre new_livre) {
+		if (!Validation.estValide(new_livre.getCote(), 100) || !Validation.estValide(new_livre.getTitre(), 100)) {
+			return -3;
+		}
 		int result = -1;
 		String req = "INSERT INTO livre (cote, num, titre, datepret) VALUES (?, NULL, ?, NULL)";
 		DBAction.DBConnexion();
