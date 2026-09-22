@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: ecole-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: ecole
+    ports:
+      - "8889:3306"
+    volumes:
+      - ecole-mysql-data:/var/lib/mysql
+      - ./ecole.sql:/docker-entrypoint-initdb.d/1-ecole.sql:ro
+      - ./ecole_test.sql:/docker-entrypoint-initdb.d/2-ecole_test.sql:ro
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ecole-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+    ports:
+      - "8091:80"
+    depends_on:
+      - db
+
+volumes:
+  ecole-mysql-data:
