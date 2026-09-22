@@ -1,9 +1,12 @@
 package com.crea.jee.wrappers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
@@ -12,8 +15,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.crea.jee.beans.Chambre;
 import com.crea.jee.beans.Eleve;
+import com.crea.jee.beans.Livre;
+import com.crea.jee.dao.ChambreDao;
 import com.crea.jee.dao.EleveDao;
+import com.crea.jee.dao.InscritDao;
+import com.crea.jee.dao.LivreDao;
 import com.crea.jee.utils.DBAction;
 
 /*
@@ -24,12 +32,23 @@ import com.crea.jee.utils.DBAction;
  */
 class EleveDaoTest {
 
-	// vide la table eleve pour repartir d'un état connu avant chaque test
+	/*
+	 * vide eleve et les tables liées pour repartir d'un état connu avant chaque test
+	 * eleve.no et chambre.num se référencent mutuellement (FK sans ON DELETE) : on les remet
+	 * à NULL avant de supprimer quoi que ce soit, sinon la suppression de chambre échoue si un
+	 * test a laissé un élève rattaché à une chambre
+	 */
 	@BeforeEach
-	void viderTableEleve() throws SQLException {
+	void viderLesTables() throws SQLException {
 		DBAction.DBConnexion();
 		try (Statement stm = DBAction.getCon().createStatement()) {
+			stm.executeUpdate("UPDATE eleve SET no = NULL");
+			stm.executeUpdate("UPDATE chambre SET num = NULL");
+			stm.executeUpdate("DELETE FROM inscrit");
+			stm.executeUpdate("DELETE FROM livre");
+			stm.executeUpdate("DELETE FROM chambre");
 			stm.executeUpdate("DELETE FROM eleve");
+			stm.executeUpdate("DELETE FROM uv");
 		} finally {
 			DBAction.DBClose();
 		}
@@ -38,7 +57,7 @@ class EleveDaoTest {
 	// ne laisse aucune donnée de test derrière soi
 	@AfterEach
 	void nettoyerApresTest() throws SQLException {
-		viderTableEleve();
+		viderLesTables();
 	}
 
 	@Test
@@ -111,6 +130,63 @@ class EleveDaoTest {
 	}
 
 	@Test
+	void updateNumEleve_numDejaExistant_retourneMoins2() {
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse 1"));
+		EleveDao.addEleve(new Eleve("TEST002", 0, "Testeur Deux", 30, "Adresse 2"));
+
+		int resultat = EleveDao.updateNumEleve("TEST001", "TEST002");
+
+		assertEquals(-2, resultat);
+		assertNotNull(EleveDao.getEleveByNum("TEST001"));
+	}
+
+	@Test
+	void updateNumEleve_nouveauNumInvalide_retourneMoins3() {
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+
+		int resultat = EleveDao.updateNumEleve("TEST001", "");
+
+		assertEquals(-3, resultat);
+		assertNotNull(EleveDao.getEleveByNum("TEST001"));
+	}
+
+	@Test
+	void getEleveByNo_inconnue_retourneNull() {
+		assertNull(EleveDao.getEleveByNo(99999));
+	}
+
+	// eleve.no n'est modifiable par aucune méthode publique d'EleveDao : on le positionne directement en SQL
+	@Test
+	void getEleveByNo_retourneLOccupant() throws SQLException {
+		ChambreDao.addChambre(new Chambre(999, null, 100f));
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+
+		DBAction.DBConnexion();
+		try (PreparedStatement ps = DBAction.getCon().prepareStatement("UPDATE eleve SET no = ? WHERE num = ?")) {
+			ps.setInt(1, 999);
+			ps.setString(2, "TEST001");
+			ps.executeUpdate();
+		} finally {
+			DBAction.DBClose();
+		}
+
+		Eleve occupant = EleveDao.getEleveByNo(999);
+
+		assertNotNull(occupant);
+		assertEquals("TEST001", occupant.getNum());
+	}
+
+	@Test
+	void getElevesByNom_aucunResultat_retourneListeVide() {
+		assertTrue(EleveDao.getElevesByNom("Inconnu").isEmpty());
+	}
+
+	@Test
+	void getElevesByAge_aucunResultat_retourneListeVide() {
+		assertTrue(EleveDao.getElevesByAge(999).isEmpty());
+	}
+
+	@Test
 	void getElevesByNom_filtreCorrectement() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Dupont", 25, "Adresse 1"));
 		EleveDao.addEleve(new Eleve("TEST002", 0, "Dupont", 30, "Adresse 2"));
@@ -157,6 +233,58 @@ class EleveDaoTest {
 		int nbSupprimes = EleveDao.deleteEleveByNum("INCONNU999");
 
 		assertEquals(0, nbSupprimes);
+	}
+
+	/*
+	 * vérifie la transaction de deleteEleveByNum : chambre et livre doivent être libérés
+	 * (num = NULL, pas supprimés) et les inscriptions doivent disparaître, alors que l'élève
+	 * lui-même est bien supprimé
+	 */
+	@Test
+	void deleteEleveByNum_libereChambreLivreEtSupprimeLesInscriptions() throws SQLException {
+		DBAction.DBConnexion();
+		try (Statement stm = DBAction.getCon().createStatement()) {
+			stm.executeUpdate("INSERT INTO uv (code, nbh, coord) VALUES ('UV_TEST', 10, 'Coordinateur Test')");
+		} finally {
+			DBAction.DBClose();
+		}
+
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+
+		ChambreDao.addChambre(new Chambre(999, null, 100f));
+		ChambreDao.updateOccupantChambre(999, "TEST001");
+
+		LivreDao.addLivre(new Livre("COTE_TEST", null, "Titre Test", null));
+		LivreDao.updateEmprunteurLivre("COTE_TEST", "TEST001");
+
+		DBAction.DBConnexion();
+		try (PreparedStatement ps = DBAction.getCon()
+				.prepareStatement("INSERT INTO inscrit (code, num, note) VALUES (?, ?, ?)")) {
+			ps.setString(1, "UV_TEST");
+			ps.setString(2, "TEST001");
+			ps.setFloat(3, 15f);
+			ps.executeUpdate();
+		} finally {
+			DBAction.DBClose();
+		}
+
+		int nbSupprimes = EleveDao.deleteEleveByNum("TEST001");
+
+		assertEquals(1, nbSupprimes);
+		assertNull(EleveDao.getEleveByNum("TEST001"));
+
+		Chambre chambre = ChambreDao.getChambreByNo(999);
+		assertNotNull(chambre);
+		assertNull(chambre.getNum());
+
+		Livre livre = LivreDao.getLivreByCote("COTE_TEST");
+		assertNotNull(livre);
+		assertNull(livre.getNum());
+		assertNull(livre.getDatepret());
+
+		boolean inscriptionRestante = InscritDao.getAllInscriptions().stream()
+				.anyMatch(i -> "TEST001".equals(i.getNum()));
+		assertFalse(inscriptionRestante);
 	}
 
 }
