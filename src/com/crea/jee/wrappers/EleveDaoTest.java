@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.crea.jee.beans.Chambre;
@@ -26,7 +27,9 @@ import com.crea.jee.dao.LivreDao;
  * Ils tournent contre la base ecole_test (schéma identique à ecole, vide) : lancer la JVM
  * avec -Ddb.name=ecole_test pour que DBAction cible cette base, et avoir le docker-compose
  * (service db) démarré avant de lancer les tests
+ * [OK] = cas valide, l'opération doit réussir ; [ERREUR] = cas invalide, le DAO doit refuser ou ne rien trouver
  */
+@DisplayName("EleveDao")
 class EleveDaoTest {
 
 	@BeforeEach
@@ -36,10 +39,11 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] addEleve : un élève ajouté se retrouve en base avec les bonnes informations")
 	void addEleve_ajouteEtRecuperable() {
-		Eleve nouvel_eleve = new Eleve("TEST001", 0, "Testeur Un", 25, "1 rue du Test");
+		Eleve nouvelEleve = new Eleve("TEST001", 0, "Testeur Un", 25, "1 rue du Test");
 
-		int resultAjout = EleveDao.addEleve(nouvel_eleve);
+		int resultAjout = EleveDao.addEleve(nouvelEleve);
 		assertEquals(1, resultAjout);
 
 		Eleve recupere = EleveDao.getEleveByNum("TEST001");
@@ -50,6 +54,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] addEleve : ajouter un numéro déjà existant est refusé (code -2)")
 	void addEleve_numDejaExistant_retourneMoins2() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "1 rue du Test"));
 
@@ -59,6 +64,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] addEleve : numéro vide, nom vide ou âge négatif sont refusés (code -3) sans rien écrire en base")
 	void addEleve_donneesInvalides_retourneMoins3() {
 		assertEquals(-3, EleveDao.addEleve(new Eleve("", 0, "Nom", 25, "Adresse")));
 		assertEquals(-3, EleveDao.addEleve(new Eleve("TEST002", 0, "", 25, "Adresse")));
@@ -69,11 +75,13 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getEleveByNum : un numéro inconnu renvoie null")
 	void getEleveByNum_inconnu_retourneNull() {
 		assertNull(EleveDao.getEleveByNum("INCONNU999"));
 	}
 
 	@Test
+	@DisplayName("[OK] updateAdresseEleve : la nouvelle adresse est bien enregistrée")
 	void updateAdresseEleve_modifieLAdresse() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Ancienne adresse"));
 
@@ -84,6 +92,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateAdresseEleve : une adresse vide est refusée (code -3), l'ancienne est conservée")
 	void updateAdresseEleve_adresseInvalide_retourneMoins3() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Ancienne adresse"));
 
@@ -94,6 +103,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] updateNumEleve : l'élève est accessible sous son nouveau numéro, plus sous l'ancien")
 	void updateNumEleve_renommeLEleve() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
 
@@ -105,6 +115,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateNumEleve : renommer vers un numéro déjà pris est refusé (code -2)")
 	void updateNumEleve_numDejaExistant_retourneMoins2() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse 1"));
 		EleveDao.addEleve(new Eleve("TEST002", 0, "Testeur Deux", 30, "Adresse 2"));
@@ -116,6 +127,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateNumEleve : un nouveau numéro vide est refusé (code -3)")
 	void updateNumEleve_nouveauNumInvalide_retourneMoins3() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
 
@@ -126,12 +138,14 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getEleveByNo : une chambre sans occupant renvoie null")
 	void getEleveByNo_inconnue_retourneNull() {
 		assertNull(EleveDao.getEleveByNo(99999));
 	}
 
 	// eleve.no n'est modifiable par aucune méthode publique d'EleveDao : on le positionne directement en SQL
 	@Test
+	@DisplayName("[OK] getEleveByNo : renvoie l'élève rattaché à la chambre demandée")
 	void getEleveByNo_retourneLOccupant() throws SQLException {
 		ChambreDao.addChambre(new Chambre(999, null, 100f));
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
@@ -145,16 +159,19 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getElevesByNom : un nom inconnu renvoie une liste vide (pas null, pas d'exception)")
 	void getElevesByNom_aucunResultat_retourneListeVide() {
 		assertTrue(EleveDao.getElevesByNom("Inconnu").isEmpty());
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getElevesByAge : un âge sans élève renvoie une liste vide")
 	void getElevesByAge_aucunResultat_retourneListeVide() {
 		assertTrue(EleveDao.getElevesByAge(999).isEmpty());
 	}
 
 	@Test
+	@DisplayName("[OK] getElevesByNom : ne renvoie que les élèves portant ce nom")
 	void getElevesByNom_filtreCorrectement() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Dupont", 25, "Adresse 1"));
 		EleveDao.addEleve(new Eleve("TEST002", 0, "Dupont", 30, "Adresse 2"));
@@ -166,6 +183,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getElevesByAge : ne renvoie que les élèves ayant cet âge")
 	void getElevesByAge_filtreCorrectement() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Dupont", 25, "Adresse 1"));
 		EleveDao.addEleve(new Eleve("TEST002", 0, "Martin", 25, "Adresse 2"));
@@ -177,6 +195,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getAllEleves : renvoie tous les élèves de la base")
 	void getAllEleves_retourneTousLesEleves() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Dupont", 25, "Adresse 1"));
 		EleveDao.addEleve(new Eleve("TEST002", 0, "Martin", 30, "Adresse 2"));
@@ -187,6 +206,7 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] deleteEleveByNum : l'élève supprimé n'est plus en base")
 	void deleteEleveByNum_supprimeLEleve() {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
 
@@ -197,18 +217,15 @@ class EleveDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] deleteEleveByNum : supprimer un numéro inconnu ne supprime rien (0 ligne)")
 	void deleteEleveByNum_inconnu_retourneZero() {
 		int nbSupprimes = EleveDao.deleteEleveByNum("INCONNU999");
 
 		assertEquals(0, nbSupprimes);
 	}
 
-	/*
-	 * vérifie la transaction de deleteEleveByNum : chambre et livre doivent être libérés
-	 * (num = NULL, pas supprimés) et les inscriptions doivent disparaître, alors que l'élève
-	 * lui-même est bien supprimé
-	 */
 	@Test
+	@DisplayName("[OK] deleteEleveByNum : libère sa chambre et son livre (sans les supprimer) et efface ses inscriptions")
 	void deleteEleveByNum_libereChambreLivreEtSupprimeLesInscriptions() throws SQLException {
 		BaseDeTest.executer("INSERT INTO uv (code, nbh, coord) VALUES (?, ?, ?)", "UV_TEST", 10, "Coordinateur Test");
 

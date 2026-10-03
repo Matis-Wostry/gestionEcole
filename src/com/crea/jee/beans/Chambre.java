@@ -8,7 +8,7 @@ public class Chambre {
 	/*
 	 * Attributs
 	 * no = ID de la chambre
-	 * num = Numero de l'élève qui occupe la chambre (null si inoccupée)
+	 * num = Numéro de l'élève qui occupe la chambre (null si inoccupée)
 	 * prix = Prix de la chambre
 	 */
 	private int no;
@@ -16,12 +16,11 @@ public class Chambre {
 	private float prix;
 
 	/*
-	 * Constructeur
+	 * Constructeurs
 	 */
 
 	// construit une chambre avec toutes ses informations
 	public Chambre(int no, String num, float prix) {
-		super();
 		this.no = no;
 		this.num = num;
 		this.prix = prix;
@@ -33,7 +32,7 @@ public class Chambre {
 	}
 
 	/*
-	 * Getteurs et Setteurs
+	 * Getters et setters
 	 */
 
 	// retourne le numéro de la chambre
@@ -67,7 +66,7 @@ public class Chambre {
 	}
 
 	/*
-	 * Methode
+	 * Méthodes
 	 */
 
 	// construit la représentation texte de la chambre

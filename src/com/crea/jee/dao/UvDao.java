@@ -12,6 +12,9 @@ import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table uv
+ * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
+ * -1 = erreur SQL, -3 = données invalides (refusées avant tout accès à la base)
+ * Les méthodes de lecture retournent null (ou une liste vide) si rien n'est trouvé ou en cas d'erreur
  */
 public class UvDao {
 
@@ -33,7 +36,7 @@ public class UvDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -76,7 +79,7 @@ public class UvDao {
 		return result;
 	}
 
-	// met à jour le nombre d'heure de cours d'une uv identifiée par son code
+	// met à jour le nombre d'heuresde cours d'une uv identifiée par son code
 	public static int updateNbhUv(String code, int nbh) {
 		if (!Validation.estPositif(nbh) || !Validation.estDansPlageTinyint(nbh)) {
 			return -3;
@@ -128,14 +131,14 @@ public class UvDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
 		return liste;
 	}
 
-	// récupère la liste des uv ayant un nombre d'heure supérieur à une valeur donnée
+	// récupère la liste des uv ayant un nombre d'heuressupérieur à une valeur donnée
 	public static List<Uv> getUvsNbhSuperieur(int valeur) {
 		List<Uv> liste = new ArrayList<>();
 		String request = "SELECT * FROM uv WHERE nbh > ?";
@@ -148,7 +151,7 @@ public class UvDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}

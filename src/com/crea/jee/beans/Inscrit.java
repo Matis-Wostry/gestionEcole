@@ -1,14 +1,14 @@
 package com.crea.jee.beans;
 
 /*
-* Cette classe représente l'inscription d'un élève à une uv, avec sa note
-* Elle correspond à la table inscrit de la base de données (clé composée code+num)
-*/
+ * Cette classe représente l'inscription d'un élève à une uv, avec sa note
+ * Elle correspond à la table inscrit de la base de données (clé composée code+num)
+ */
 public class Inscrit {
 	/*
 	 * Attributs
 	 * code = Id code de l'uv
-	 * num = Numero identifiant l'élève
+	 * num = Numéro identifiant l'élève
 	 * note = Note accordée à l'élève sur cette uv
 	 */
 	private String code;
@@ -16,11 +16,10 @@ public class Inscrit {
 	private float note;
 
 	/*
-	 * Constructeur
+	 * Constructeurs
 	 */
 	// construit une inscription avec toutes ses informations
 	public Inscrit(String code, String num, float note) {
-		super();
 		this.code = code;
 		this.num = num;
 		this.note = note;
@@ -32,7 +31,7 @@ public class Inscrit {
 	}
 
 	/*
-	 * Getteurs et Setteurs
+	 * Getters et setters
 	 */
 	// retourne le code de l'uv concernée
 	public String getCode() {
@@ -65,7 +64,7 @@ public class Inscrit {
 	}
 
 	/*
-	 * Methode
+	 * Méthodes
 	 */
 	// construit la représentation texte de l'inscription
 	@Override

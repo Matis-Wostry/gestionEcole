@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.crea.jee.beans.Eleve;
@@ -18,7 +19,9 @@ import com.crea.jee.dao.InscritDao;
 /*
  * Tests unitaires de InscritDao, contre la base ecole_test (-Ddb.name=ecole_test)
  * InscritDao n'a pas de méthode d'ajout : uv et inscriptions de test sont insérées directement en SQL
+ * [OK] = cas valide, l'opération doit réussir ; [ERREUR] = cas invalide, le DAO doit refuser ou ne rien trouver
  */
+@DisplayName("InscritDao")
 class InscritDaoTest {
 
 	private static final float DELTA = 0.001f;
@@ -48,11 +51,13 @@ class InscritDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getAllInscriptions : sans aucune inscription, renvoie une liste vide")
 	void getAllInscriptions_baseVide_retourneListeVide() {
 		assertTrue(InscritDao.getAllInscriptions().isEmpty());
 	}
 
 	@Test
+	@DisplayName("[OK] getAllInscriptions : renvoie toutes les inscriptions avec leur note")
 	void getAllInscriptions_retourneToutesLesInscriptions() throws SQLException {
 		inscrire("UV_TEST1", "TEST001", 12f);
 		inscrire("UV_TEST2", "TEST001", 15.5f);
@@ -64,6 +69,7 @@ class InscritDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] updateNoteInscrit : la nouvelle note est bien enregistrée")
 	void updateNoteInscrit_modifieLaNote() throws SQLException {
 		inscrire("UV_TEST1", "TEST001", 12f);
 
@@ -72,6 +78,7 @@ class InscritDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] updateNoteInscrit : seule la note de l'UV visée change, pas celle des autres UV de l'élève")
 	void updateNoteInscrit_neToucheQueLInscriptionCiblee() throws SQLException {
 		inscrire("UV_TEST1", "TEST001", 12f);
 		inscrire("UV_TEST2", "TEST001", 14f);
@@ -82,11 +89,13 @@ class InscritDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateNoteInscrit : modifier une inscription inexistante ne modifie rien (0 ligne)")
 	void updateNoteInscrit_inscriptionInconnue_retourneZero() {
 		assertEquals(0, InscritDao.updateNoteInscrit("UV_TEST1", "INCONNU999", 10f));
 	}
 
 	@Test
+	@DisplayName("[OK] deleteInscription : supprime seulement l'inscription visée, les autres restent")
 	void deleteInscription_supprimeUniquementLInscriptionCiblee() throws SQLException {
 		inscrire("UV_TEST1", "TEST001", 12f);
 		inscrire("UV_TEST2", "TEST001", 14f);
@@ -99,6 +108,7 @@ class InscritDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] deleteInscription : supprimer une inscription inexistante ne supprime rien (0 ligne)")
 	void deleteInscription_inconnue_retourneZero() {
 		assertEquals(0, InscritDao.deleteInscription("UV_TEST1", "INCONNU999"));
 	}

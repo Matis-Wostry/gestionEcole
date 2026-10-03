@@ -5,6 +5,12 @@ import java.util.List;
 import com.crea.jee.beans.Chambre;
 import com.crea.jee.dao.ChambreDao;
 
+/*
+ * Test manuel de ChambreDao : appelle chaque méthode et affiche le résultat dans la console
+ * Prévu pour les données de démo de la base ecole (AGUE001 sert d'occupant) : la chambre de test 100
+ * est supprimée à la fin, la base revient à son état initial
+ * Version automatisée avec vérifications : com.crea.jee.wrappers.ChambreDaoTest
+ */
 public class ChambreTest {
 	public static void main(String[] args) {
 

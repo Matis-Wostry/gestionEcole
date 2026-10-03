@@ -8,6 +8,12 @@ import com.crea.jee.beans.Uv;
 import com.crea.jee.dao.UvDao;
 import com.crea.jee.utils.DBAction;
 
+/*
+ * Test manuel de UvDao : appelle chaque méthode et affiche le résultat dans la console
+ * Prévu pour les données de démo de la base ecole (JAVA_Grp1...) : l'uv de test TEST_UV
+ * est supprimée à la fin, la base revient à son état initial
+ * Version automatisée avec vérifications : com.crea.jee.wrappers.UvDaoTest
+ */
 public class UvTest {
 	public static void main(String[] args) {
 

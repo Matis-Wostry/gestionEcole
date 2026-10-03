@@ -12,6 +12,9 @@ import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table eleve
+ * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
+ * -1 = erreur SQL, -2 = numéro déjà existant, -3 = données invalides (refusées avant tout accès à la base)
+ * Les méthodes de lecture retournent null (ou une liste vide) si rien n'est trouvé ou en cas d'erreur
  */
 public class EleveDao {
 
@@ -21,12 +24,9 @@ public class EleveDao {
 				rs.getString("adresse"));
 	}
 
-	/*
-	 * récupère un élève à partir de son numéro
-	 * retourne null s'il n'est pas trouvé, ou un élève avec age = -1 en cas d'erreur
-	 */
+	// récupère un élève à partir de son numéro
 	public static Eleve getEleveByNum(String num) {
-		Eleve e = new Eleve();
+		Eleve e = null;
 		String request = "SELECT * FROM eleve WHERE num = ?";
 		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
@@ -34,13 +34,10 @@ public class EleveDao {
 			try (ResultSet response = ps.executeQuery()) {
 				if (response.next()) {
 					e = mapResultSet(response);
-				} else {
-					e = null;
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
-			e.setAge(-1);
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -60,7 +57,7 @@ public class EleveDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -80,7 +77,7 @@ public class EleveDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -178,20 +175,20 @@ public class EleveDao {
 	}
 
 	// ajoute un nouvel élève, sans chambre attribuée
-	public static int addEleve(Eleve new_eleve) {
-		if (!Validation.estValide(new_eleve.getNum(), 100) || !Validation.estValide(new_eleve.getNom(), 50)
-				|| !Validation.longueurValide(new_eleve.getAdresse(), 200) || !Validation.estPositif(new_eleve.getAge())
-				|| !Validation.estDansPlageTinyint(new_eleve.getAge())) {
+	public static int addEleve(Eleve nouvelEleve) {
+		if (!Validation.estValide(nouvelEleve.getNum(), 100) || !Validation.estValide(nouvelEleve.getNom(), 50)
+				|| !Validation.longueurValide(nouvelEleve.getAdresse(), 200) || !Validation.estPositif(nouvelEleve.getAge())
+				|| !Validation.estDansPlageTinyint(nouvelEleve.getAge())) {
 			return -3;
 		}
 		int result = -1;
 		String req = "INSERT INTO eleve (num, no, nom, age, adresse) VALUES (?, NULL, ?, ?, ?)";
 		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(req)) {
-			ps.setString(1, new_eleve.getNum());
-			ps.setString(2, new_eleve.getNom());
-			ps.setInt(3, new_eleve.getAge());
-			ps.setString(4, new_eleve.getAdresse());
+			ps.setString(1, nouvelEleve.getNum());
+			ps.setString(2, nouvelEleve.getNom());
+			ps.setInt(3, nouvelEleve.getAge());
+			ps.setString(4, nouvelEleve.getAdresse());
 			result = ps.executeUpdate();
 		} catch (SQLException ex) {
 			if (ex.getErrorCode() == 1062) {// la clé existe déjà
@@ -217,7 +214,7 @@ public class EleveDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -236,7 +233,7 @@ public class EleveDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}

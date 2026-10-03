@@ -13,7 +13,7 @@ import java.sql.Statement;
 public class DBAction {
   
   private static final String dbName   = System.getProperty("db.name", "ecole"); //nom de la base ; -Ddb.name=ecole_test pour cibler la base de test
-  private static final String dbPath   = "jdbc:mysql://localhost:8889/" + dbName; //N� de port mysql 3306, 8889 sous mac
+  private static final String dbPath   = "jdbc:mysql://localhost:8889/" + dbName; //N° de port mysql 3306, 8889 sous mac
   private static final String user     = "root";
   private static final String password = "";
   private static Connection   con      = null;
@@ -23,7 +23,7 @@ public class DBAction {
 
   public static Exception DBConnexion() {
       try {
-          Class.forName("com.mysql.jdbc.Driver").newInstance();
+          Class.forName("com.mysql.cj.jdbc.Driver");
           con = DriverManager.getConnection(dbPath, user, password);
           stm = con.createStatement();
           return null;

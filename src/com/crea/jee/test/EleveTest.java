@@ -5,6 +5,12 @@ import java.util.List;
 import com.crea.jee.beans.Eleve;
 import com.crea.jee.dao.EleveDao;
 
+/*
+ * Test manuel de EleveDao : appelle chaque méthode et affiche le résultat dans la console
+ * Prévu pour les données de démo de la base ecole (AGUE001...) : l'élève de test MOMO88
+ * (renommé MOMO89 en cours de route) est supprimé à la fin, la base revient à son état initial
+ * Version automatisée avec vérifications : com.crea.jee.wrappers.EleveDaoTest
+ */
 public class EleveTest {
 	public static void main(String[] args) {
 

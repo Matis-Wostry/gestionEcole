@@ -5,6 +5,12 @@ import java.util.List;
 import com.crea.jee.beans.Livre;
 import com.crea.jee.dao.LivreDao;
 
+/*
+ * Test manuel de LivreDao : appelle chaque méthode et affiche le résultat dans la console
+ * Prévu pour les données de démo de la base ecole (AGUE001 sert d'emprunteur) : le livre de test
+ * ISBN99999 est rendu puis supprimé à la fin, la base revient à son état initial
+ * Version automatisée avec vérifications : com.crea.jee.wrappers.LivreDaoTest
+ */
 public class LivreTest {
 	public static void main(String[] args) {
 

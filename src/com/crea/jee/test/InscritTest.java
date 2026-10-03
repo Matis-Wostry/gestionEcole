@@ -8,6 +8,12 @@ import com.crea.jee.beans.Inscrit;
 import com.crea.jee.dao.InscritDao;
 import com.crea.jee.utils.DBAction;
 
+/*
+ * Test manuel de InscritDao : appelle chaque méthode et affiche le résultat dans la console
+ * Prévu pour les données de démo de la base ecole (JAVA_Grp1, AGUE001) : l'inscription de test
+ * est supprimée à la fin, la base revient à son état initial
+ * Version automatisée avec vérifications : com.crea.jee.wrappers.InscritDaoTest
+ */
 public class InscritTest {
 	public static void main(String[] args) {
 

@@ -11,6 +11,8 @@ import com.crea.jee.utils.DBAction;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table inscrit
+ * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou -1 en cas d'erreur SQL
+ * Les méthodes de lecture retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
 public class InscritDao {
 
@@ -48,7 +50,7 @@ public class InscritDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}

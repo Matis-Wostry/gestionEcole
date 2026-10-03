@@ -1,14 +1,14 @@
 package com.crea.jee.beans;
 
 /*
-* Cette classe représente une unité de valeur (UV) ou d'enseignement
-* Elle correspond à la table uv de la base de données
-*/
+ * Cette classe représente une unité de valeur (UV) ou d'enseignement
+ * Elle correspond à la table uv de la base de données
+ */
 public class Uv {
 	/*
 	 * Attributs
 	 * code = Id code de l'uv
-	 * nbh = Nombre d'heure de cours
+	 * nbh = Nombre d'heures de cours
 	 * coord = Coordinateur de l'uv
 	 */
 	private String code;
@@ -16,11 +16,10 @@ public class Uv {
 	private String coord;
 
 	/*
-	 * Constructeur
+	 * Constructeurs
 	 */
 	// construit une uv avec toutes ses informations
 	public Uv(String code, int nbh, String coord) {
-		super();
 		this.code = code;
 		this.nbh = nbh;
 		this.coord = coord;
@@ -32,7 +31,7 @@ public class Uv {
 	}
 
 	/*
-	 * Getteurs et Setteurs
+	 * Getters et setters
 	 */
 	// retourne le code de l'uv
 	public String getCode() {
@@ -44,12 +43,12 @@ public class Uv {
 		this.code = code;
 	}
 
-	// retourne le nombre d'heure de cours de l'uv
+	// retourne le nombre d'heures de cours de l'uv
 	public int getNbh() {
 		return nbh;
 	}
 
-	// modifie le nombre d'heure de cours de l'uv
+	// modifie le nombre d'heures de cours de l'uv
 	public void setNbh(int nbh) {
 		this.nbh = nbh;
 	}
@@ -65,7 +64,7 @@ public class Uv {
 	}
 
 	/*
-	 * Methode
+	 * Méthodes
 	 */
 	// construit la représentation texte de l'uv
 	@Override

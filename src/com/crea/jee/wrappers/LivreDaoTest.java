@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.crea.jee.beans.Eleve;
@@ -19,7 +20,9 @@ import com.crea.jee.dao.LivreDao;
 
 /*
  * Tests unitaires de LivreDao, contre la base ecole_test (-Ddb.name=ecole_test)
+ * [OK] = cas valide, l'opération doit réussir ; [ERREUR] = cas invalide, le DAO doit refuser ou ne rien trouver
  */
+@DisplayName("LivreDao")
 class LivreDaoTest {
 
 	@BeforeEach
@@ -29,6 +32,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] addLivre : un livre ajouté se retrouve en base, disponible (sans emprunteur ni date)")
 	void addLivre_ajouteDisponible() {
 		int resultat = LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 
@@ -41,6 +45,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] addLivre : ajouter une cote déjà existante est refusé (code -2)")
 	void addLivre_coteDejaExistante_retourneMoins2() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 
@@ -48,6 +53,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] addLivre : une cote vide ou un titre vide sont refusés (code -3)")
 	void addLivre_donneesInvalides_retourneMoins3() {
 		assertEquals(-3, LivreDao.addLivre(new Livre("", null, "Titre", null)));
 		assertEquals(-3, LivreDao.addLivre(new Livre("ISBN_TEST2", null, "  ", null)));
@@ -56,11 +62,13 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getLivreByCote : une cote inconnue renvoie null")
 	void getLivreByCote_inconnu_retourneNull() {
 		assertNull(LivreDao.getLivreByCote("INCONNU999"));
 	}
 
 	@Test
+	@DisplayName("[OK] updateEmprunteurLivre : un emprunt enregistre l'élève et la date de prêt")
 	void updateEmprunteurLivre_empruntPoseLaDate() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
@@ -73,6 +81,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] updateEmprunteurLivre : un retour remet l'emprunteur et la date de prêt à vide")
 	void updateEmprunteurLivre_retourRemetLaDateANull() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
@@ -86,6 +95,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateEmprunteurLivre : un emprunt par un élève inexistant échoue (code -1)")
 	void updateEmprunteurLivre_eleveInexistant_echoue() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 
@@ -94,6 +104,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getLivresEmpruntesByEleve : renvoie uniquement les livres empruntés par l'élève")
 	void getLivresEmpruntesByEleve_retourneSesLivres() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 		LivreDao.addLivre(new Livre("ISBN_TEST2", null, "Titre Deux", null));
@@ -106,11 +117,13 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getLivresEmpruntesByEleve : un élève sans emprunt renvoie une liste vide")
 	void getLivresEmpruntesByEleve_aucunEmprunt_retourneListeVide() {
 		assertTrue(LivreDao.getLivresEmpruntesByEleve("INCONNU999").isEmpty());
 	}
 
 	@Test
+	@DisplayName("[OK] updateTitreLivre : le nouveau titre est bien enregistré")
 	void updateTitreLivre_modifieLeTitre() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Ancien titre", null));
 
@@ -119,6 +132,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateTitreLivre : un titre vide est refusé (code -3), l'ancien est conservé")
 	void updateTitreLivre_titreInvalide_retourneMoins3() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Ancien titre", null));
 
@@ -127,6 +141,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getLivresDisponibles : ne renvoie que les livres non empruntés")
 	void getLivresDisponibles_exclutLesLivresEmpruntes() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 		LivreDao.addLivre(new Livre("ISBN_TEST2", null, "Titre Deux", null));
@@ -140,6 +155,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getAllLivres : renvoie tous les livres de la base")
 	void getAllLivres_retourneTousLesLivres() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 		LivreDao.addLivre(new Livre("ISBN_TEST2", null, "Titre Deux", null));
@@ -148,6 +164,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] deleteLivreByCote : le livre supprimé n'est plus en base")
 	void deleteLivreByCote_supprimeLeLivre() {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 
@@ -156,6 +173,7 @@ class LivreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] deleteLivreByCote : supprimer une cote inconnue ne supprime rien (0 ligne)")
 	void deleteLivreByCote_inconnu_retourneZero() {
 		assertEquals(0, LivreDao.deleteLivreByCote("INCONNU999"));
 	}

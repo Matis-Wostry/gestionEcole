@@ -3,16 +3,16 @@ package com.crea.jee.beans;
 import java.sql.Timestamp;
 
 /*
-* Cette classe représente un livre éventuellement emprunté par un élève
-* Elle correspond à la table livre de la base de données
-*/
+ * Cette classe représente un livre éventuellement emprunté par un élève
+ * Elle correspond à la table livre de la base de données
+ */
 public class Livre {
 	/*
 	 * Attributs
-	 * cote = Numero identifiant du livre
-	 * num = Numero de l'élève qui a emprunté le livre (null si disponible)
+	 * cote = Numéro identifiant du livre
+	 * num = Numéro de l'élève qui a emprunté le livre (null si disponible)
 	 * titre = Titre du livre
-	 * datepret = Date et heure du pret du livre par l'élève
+	 * datepret = Date et heure du prêt du livre par l'élève
 	 */
 	private String cote;
 	private String num;
@@ -20,12 +20,11 @@ public class Livre {
 	private Timestamp datepret;
 
 	/*
-	 * Constructeur
+	 * Constructeurs
 	 */
 
 	// construit un livre avec toutes ses informations
 	public Livre(String cote, String num, String titre, Timestamp datepret) {
-		super();
 		this.cote = cote;
 		this.num = num;
 		this.titre = titre;
@@ -38,7 +37,7 @@ public class Livre {
 	}
 
 	/*
-	 * Getteurs et Setteurs
+	 * Getters et setters
 	 */
 
 	// retourne la cote du livre
@@ -82,7 +81,7 @@ public class Livre {
 	}
 
 	/*
-	 * Methode
+	 * Méthodes
 	 */
 
 	// construit la représentation texte du livre

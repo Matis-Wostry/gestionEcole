@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.crea.jee.beans.Eleve;
@@ -21,7 +22,9 @@ import com.crea.jee.dao.UvDao;
 /*
  * Tests unitaires de UvDao, contre la base ecole_test (-Ddb.name=ecole_test)
  * UvDao n'a pas de méthode d'ajout : les uv de test sont insérées directement en SQL
+ * [OK] = cas valide, l'opération doit réussir ; [ERREUR] = cas invalide, le DAO doit refuser ou ne rien trouver
  */
+@DisplayName("UvDao")
 class UvDaoTest {
 
 	@BeforeEach
@@ -35,6 +38,7 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getUvByCode : renvoie l'UV avec son nombre d'heures et son coordinateur")
 	void getUvByCode_retourneLUv() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
@@ -46,11 +50,13 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getUvByCode : un code inconnu renvoie null")
 	void getUvByCode_inconnue_retourneNull() {
 		assertNull(UvDao.getUvByCode("INCONNU999"));
 	}
 
 	@Test
+	@DisplayName("[OK] updateNbhUv : le nouveau nombre d'heures est bien enregistré")
 	void updateNbhUv_modifieLeNombreDHeures() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
@@ -59,6 +65,7 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateNbhUv : 0 heure ou plus de 127 heures (limite du tinyint) sont refusés (code -3)")
 	void updateNbhUv_valeurInvalide_retourneMoins3() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
@@ -68,6 +75,7 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] updateCoordUv : le nouveau coordinateur est bien enregistré")
 	void updateCoordUv_modifieLeCoordinateur() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
@@ -76,6 +84,7 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateCoordUv : un coordinateur de plus de 255 caractères est refusé (code -3)")
 	void updateCoordUv_tropLong_retourneMoins3() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
@@ -84,6 +93,7 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getAllUvs : renvoie toutes les UV de la base")
 	void getAllUvs_retourneToutesLesUvs() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 		ajouterUv("UV_TEST2", 10, "Mme Test");
@@ -92,6 +102,7 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getUvsNbhSuperieur : ne renvoie que les UV strictement au-dessus du seuil d'heures")
 	void getUvsNbhSuperieur_filtreStrictement() throws SQLException {
 		ajouterUv("UV_TEST1", 10, "Mr Test");
 		ajouterUv("UV_TEST2", 26, "Mme Test");
@@ -104,6 +115,7 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getUvsNbhSuperieur : un seuil qu'aucune UV ne dépasse renvoie une liste vide")
 	void getUvsNbhSuperieur_aucunResultat_retourneListeVide() throws SQLException {
 		ajouterUv("UV_TEST1", 10, "Mr Test");
 
@@ -111,6 +123,7 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] deleteUvByCode : l'UV supprimée n'est plus en base")
 	void deleteUvByCode_supprimeLUv() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
@@ -119,12 +132,13 @@ class UvDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] deleteUvByCode : supprimer un code inconnu ne supprime rien (0 ligne)")
 	void deleteUvByCode_inconnue_retourneZero() {
 		assertEquals(0, UvDao.deleteUvByCode("INCONNU999"));
 	}
 
-	// la transaction doit supprimer les inscriptions de l'uv, sans toucher à celles des autres uv
 	@Test
+	@DisplayName("[OK] deleteUvByCode : efface les inscriptions de cette UV sans toucher à celles des autres UV")
 	void deleteUvByCode_supprimeSesInscriptions() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 		ajouterUv("UV_TEST2", 10, "Mme Test");

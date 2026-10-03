@@ -12,6 +12,9 @@ import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table chambre
+ * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
+ * -1 = erreur SQL, -2 = numéro déjà existant, -3 = données invalides (refusées avant tout accès à la base)
+ * Les méthodes de lecture retournent null (ou une liste vide) si rien n'est trouvé ou en cas d'erreur
  */
 public class ChambreDao {
 
@@ -33,7 +36,7 @@ public class ChambreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -53,7 +56,7 @@ public class ChambreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -135,16 +138,16 @@ public class ChambreDao {
 	}
 
 	// ajoute une nouvelle chambre, sans occupant
-	public static int addChambre(Chambre new_chambre) {
-		if (!Validation.estPositif(new_chambre.getNo()) || !Validation.estPositif(new_chambre.getPrix())) {
+	public static int addChambre(Chambre nouvelleChambre) {
+		if (!Validation.estPositif(nouvelleChambre.getNo()) || !Validation.estPositif(nouvelleChambre.getPrix())) {
 			return -3;
 		}
 		int result = -1;
 		String req = "INSERT INTO chambre (no, num, prix) VALUES (?, NULL, ?)";
 		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(req)) {
-			ps.setInt(1, new_chambre.getNo());
-			ps.setFloat(2, new_chambre.getPrix());
+			ps.setInt(1, nouvelleChambre.getNo());
+			ps.setFloat(2, nouvelleChambre.getPrix());
 			result = ps.executeUpdate();
 		} catch (SQLException ex) {
 			if (ex.getErrorCode() == 1062) {// la clé existe déjà
@@ -170,7 +173,7 @@ public class ChambreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -189,7 +192,7 @@ public class ChambreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -208,7 +211,7 @@ public class ChambreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}

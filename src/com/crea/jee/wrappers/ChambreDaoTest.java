@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.crea.jee.beans.Chambre;
@@ -18,7 +19,9 @@ import com.crea.jee.dao.EleveDao;
 
 /*
  * Tests unitaires de ChambreDao, contre la base ecole_test (-Ddb.name=ecole_test)
+ * [OK] = cas valide, l'opération doit réussir ; [ERREUR] = cas invalide, le DAO doit refuser ou ne rien trouver
  */
+@DisplayName("ChambreDao")
 class ChambreDaoTest {
 
 	private static final float DELTA = 0.001f;
@@ -30,6 +33,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] addChambre : une chambre ajoutée se retrouve en base, libre et au bon prix")
 	void addChambre_ajouteEtRecuperable() {
 		int resultat = ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
@@ -41,6 +45,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] addChambre : ajouter un numéro de chambre déjà existant est refusé (code -2)")
 	void addChambre_noDejaExistant_retourneMoins2() {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
@@ -48,6 +53,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] addChambre : un numéro à 0 ou un prix négatif sont refusés (code -3)")
 	void addChambre_donneesInvalides_retourneMoins3() {
 		assertEquals(-3, ChambreDao.addChambre(new Chambre(0, null, 100f)));
 		assertEquals(-3, ChambreDao.addChambre(new Chambre(2, null, -10f)));
@@ -56,11 +62,13 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getChambreByNo : un numéro inconnu renvoie null")
 	void getChambreByNo_inconnue_retourneNull() {
 		assertNull(ChambreDao.getChambreByNo(99999));
 	}
 
 	@Test
+	@DisplayName("[OK] updateOccupantChambre : on peut attribuer la chambre à un élève puis la libérer")
 	void updateOccupantChambre_attribueEtLibere() {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
@@ -73,6 +81,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updateOccupantChambre : attribuer la chambre à un élève inexistant échoue (code -1)")
 	void updateOccupantChambre_eleveInexistant_echoue() {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
@@ -81,6 +90,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getChambreByOccupant : renvoie la chambre occupée par l'élève")
 	void getChambreByOccupant_retourneLaChambre() {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
@@ -93,11 +103,13 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] getChambreByOccupant : un élève sans chambre renvoie null")
 	void getChambreByOccupant_sansChambre_retourneNull() {
 		assertNull(ChambreDao.getChambreByOccupant("INCONNU999"));
 	}
 
 	@Test
+	@DisplayName("[OK] updatePrixChambre : le nouveau prix est bien enregistré")
 	void updatePrixChambre_modifieLePrix() {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
@@ -106,6 +118,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] updatePrixChambre : un prix à 0 est refusé (code -3), l'ancien prix est conservé")
 	void updatePrixChambre_prixInvalide_retourneMoins3() {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
@@ -114,6 +127,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getChambresPrixSuperieur : ne renvoie que les chambres strictement plus chères que le seuil")
 	void getChambresPrixSuperieur_filtreStrictement() {
 		ChambreDao.addChambre(new Chambre(1, null, 150f));
 		ChambreDao.addChambre(new Chambre(2, null, 300f));
@@ -126,6 +140,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getAllChambres : renvoie toutes les chambres de la base")
 	void getAllChambres_retourneToutesLesChambres() {
 		ChambreDao.addChambre(new Chambre(1, null, 150f));
 		ChambreDao.addChambre(new Chambre(2, null, 300f));
@@ -134,6 +149,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] getChambresNonOccupees : ne renvoie que les chambres sans occupant")
 	void getChambresNonOccupees_exclutLesChambresOccupees() {
 		ChambreDao.addChambre(new Chambre(1, null, 150f));
 		ChambreDao.addChambre(new Chambre(2, null, 300f));
@@ -147,6 +163,7 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[OK] deleteChambreByNo : la chambre supprimée n'est plus en base")
 	void deleteChambreByNo_supprimeLaChambre() {
 		ChambreDao.addChambre(new Chambre(1, null, 150f));
 
@@ -155,12 +172,13 @@ class ChambreDaoTest {
 	}
 
 	@Test
+	@DisplayName("[ERREUR] deleteChambreByNo : supprimer un numéro inconnu ne supprime rien (0 ligne)")
 	void deleteChambreByNo_inconnue_retourneZero() {
 		assertEquals(0, ChambreDao.deleteChambreByNo(99999));
 	}
 
-	// la transaction doit détacher l'élève (eleve.no = NULL) au lieu d'échouer sur la clé étrangère
 	@Test
+	@DisplayName("[OK] deleteChambreByNo : l'élève rattaché est détaché de la chambre au lieu de bloquer la suppression")
 	void deleteChambreByNo_detacheLEleveRattache() throws SQLException {
 		ChambreDao.addChambre(new Chambre(1, null, 150f));
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));

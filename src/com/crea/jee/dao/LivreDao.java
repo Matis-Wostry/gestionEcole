@@ -13,6 +13,9 @@ import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table livre
+ * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
+ * -1 = erreur SQL, -2 = cote déjà existante, -3 = données invalides (refusées avant tout accès à la base)
+ * Les méthodes de lecture retournent null (ou une liste vide) si rien n'est trouvé ou en cas d'erreur
  */
 public class LivreDao {
 
@@ -35,7 +38,7 @@ public class LivreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -55,7 +58,7 @@ public class LivreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -120,16 +123,16 @@ public class LivreDao {
 	}
 
 	// ajoute un nouveau livre, disponible (sans emprunteur)
-	public static int addLivre(Livre new_livre) {
-		if (!Validation.estValide(new_livre.getCote(), 100) || !Validation.estValide(new_livre.getTitre(), 100)) {
+	public static int addLivre(Livre nouveauLivre) {
+		if (!Validation.estValide(nouveauLivre.getCote(), 100) || !Validation.estValide(nouveauLivre.getTitre(), 100)) {
 			return -3;
 		}
 		int result = -1;
 		String req = "INSERT INTO livre (cote, num, titre, datepret) VALUES (?, NULL, ?, NULL)";
 		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(req)) {
-			ps.setString(1, new_livre.getCote());
-			ps.setString(2, new_livre.getTitre());
+			ps.setString(1, nouveauLivre.getCote());
+			ps.setString(2, nouveauLivre.getTitre());
 			result = ps.executeUpdate();
 		} catch (SQLException ex) {
 			if (ex.getErrorCode() == 1062) {// la clé existe déjà
@@ -154,7 +157,7 @@ public class LivreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}
@@ -173,7 +176,7 @@ public class LivreDao {
 				}
 			}
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();
 		}

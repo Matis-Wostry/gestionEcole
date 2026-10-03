@@ -1,14 +1,14 @@
 package com.crea.jee.beans;
 
 /*
-* Cette classe représente un élève de l'école
-* Elle correspond à la table eleve de la base de données
-*/
+ * Cette classe représente un élève de l'école
+ * Elle correspond à la table eleve de la base de données
+ */
 public class Eleve {
 	/*
 	 * Attributs
-	 * num = Numero identifiant l'élève
-	 * no = Numero de la chambre de l'élève (null si aucune chambre)
+	 * num = Numéro identifiant l'élève
+	 * no = Numéro de la chambre de l'élève (0 si aucune chambre)
 	 * nom = Nom de l'élève
 	 * age = Age de l'élève
 	 * adresse = Adresse de l'élève
@@ -20,12 +20,11 @@ public class Eleve {
 	private String adresse;
 
 	/*
-	 * Constructeur
+	 * Constructeurs
 	 */
 
 	// construit un élève avec toutes ses informations
 	public Eleve(String num, int no, String nom, int age, String adresse) {
-		super();
 		this.num = num;
 		this.no = no;
 		this.nom = nom;
@@ -39,7 +38,7 @@ public class Eleve {
 	}
 
 	/*
-	 * Getteurs et Setteurs
+	 * Getters et setters
 	 */
 
 	// retourne le numéro de l'élève
@@ -93,7 +92,7 @@ public class Eleve {
 	}
 
 	/*
-	 * Methode
+	 * Méthodes
 	 */
 
 	// construit la représentation texte de l'élève
