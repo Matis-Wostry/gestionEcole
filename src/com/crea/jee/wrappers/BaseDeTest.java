@@ -11,7 +11,18 @@ import com.crea.jee.utils.DBAction;
  */
 final class BaseDeTest {
 
+	private static final String BASE_DE_TEST = "ecole_test";
+
 	private BaseDeTest() {
+	}
+
+	// les tests vident les tables : on refuse de tourner ailleurs que sur la base de test
+	private static void verifierBaseDeTest() {
+		String base = System.getProperty("db.name");
+		if (!BASE_DE_TEST.equals(base)) {
+			throw new IllegalStateException("Tests lancés sur la base '" + (base == null ? "ecole" : base)
+					+ "' : ajouter -Ddb.name=" + BASE_DE_TEST + " aux VM options pour ne pas effacer les vraies données");
+		}
 	}
 
 	/*
@@ -20,6 +31,7 @@ final class BaseDeTest {
 	 * à NULL avant de supprimer quoi que ce soit, puis on supprime les tables filles avant les parentes
 	 */
 	static void viderLesTables() throws SQLException {
+		verifierBaseDeTest();
 		DBAction.DBConnexion();
 		try (Statement stm = DBAction.getCon().createStatement()) {
 			stm.executeUpdate("UPDATE eleve SET no = NULL");
@@ -36,6 +48,7 @@ final class BaseDeTest {
 
 	// exécute une requête de mise en place des données qu'aucune méthode DAO ne permet (ajout d'uv, d'inscription...)
 	static void executer(String sql, Object... parametres) throws SQLException {
+		verifierBaseDeTest();
 		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(sql)) {
 			for (int i = 0; i < parametres.length; i++) {
