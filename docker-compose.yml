@@ -10,8 +10,8 @@ services:
       - "8889:3306"
     volumes:
       - ecole-mysql-data:/var/lib/mysql
-      - ./ecole.sql:/docker-entrypoint-initdb.d/1-ecole.sql:ro
-      - ./ecole_test.sql:/docker-entrypoint-initdb.d/2-ecole_test.sql:ro
+      - ./data/ecole.sql:/docker-entrypoint-initdb.d/1-ecole.sql:ro
+      - ./data/ecole_test.sql:/docker-entrypoint-initdb.d/2-ecole_test.sql:ro
 
   phpmyadmin:
     image: phpmyadmin:latest
