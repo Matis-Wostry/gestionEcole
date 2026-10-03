@@ -9,12 +9,15 @@ import java.util.List;
 import com.crea.jee.beans.Uv;
 import com.crea.jee.utils.DBAction;
 import com.crea.jee.utils.Validation;
+import com.crea.jee.wrappers.UvWrapper;
+import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table uv
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
  * -1 = erreur SQL, -3 = données invalides (refusées avant tout accès à la base)
- * Les méthodes de lecture retournent null (ou une liste vide) si rien n'est trouvé ou en cas d'erreur
+ * Les lectures d'une seule uv retournent un UvWrapper (l'uv + un code réponse, voir Wrapper)
+ * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
 public class UvDao {
 
@@ -23,24 +26,29 @@ public class UvDao {
 		return new Uv(rs.getString("code"), rs.getInt("nbh"), rs.getString("coord"));
 	}
 
-	// récupère une uv à partir de son code
-	public static Uv getUvByCode(String code) {
-		Uv u = null;
+	// récupère une uv à partir de son code, avec le code réponse de la recherche
+	public static UvWrapper getUvByCode(String code) {
+		if (!Validation.estValide(code, 100)) {
+			return new UvWrapper(null, Wrapper.DONNEES_INVALIDES);
+		}
+		if (DBAction.DBConnexion() != null) {
+			return new UvWrapper(null, Wrapper.ERREUR_BASE);
+		}
 		String request = "SELECT * FROM uv WHERE code = ?";
-		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, code);
 			try (ResultSet response = ps.executeQuery()) {
 				if (response.next()) {
-					u = mapResultSet(response);
+					return new UvWrapper(mapResultSet(response), Wrapper.TROUVE);
 				}
+				return new UvWrapper(null, Wrapper.NON_TROUVE);
 			}
 		} catch (SQLException ex) {
 			System.out.println(ex.getMessage());
+			return new UvWrapper(null, Wrapper.ERREUR_BASE);
 		} finally {
 			DBAction.DBClose();
 		}
-		return u;
 	}
 
 	/*

@@ -9,13 +9,13 @@ import com.crea.jee.dao.LivreDao;
  * Test manuel de LivreDao : appelle chaque méthode et affiche le résultat dans la console
  * Prévu pour les données de démo de la base ecole (AGUE001 sert d'emprunteur) : le livre de test
  * ISBN99999 est rendu puis supprimé à la fin, la base revient à son état initial
- * Version automatisée avec vérifications : com.crea.jee.wrappers.LivreDaoTest
+ * Version automatisée avec vérifications : com.crea.jee.junit.LivreDaoTest
  */
 public class LivreTest {
 	public static void main(String[] args) {
 
 		System.out.println("=== getLivreByCote ===");
-		Livre l1 = LivreDao.getLivreByCote("ISBN10000");
+		Livre l1 = LivreDao.getLivreByCote("ISBN10000").getLivre();
 		if (l1 != null) {
 			l1.affiche();
 		} else {
@@ -34,7 +34,7 @@ public class LivreTest {
 		}
 
 		System.out.println("=== getLivreByCote (après ajout) ===");
-		Livre l3 = LivreDao.getLivreByCote("ISBN99999");
+		Livre l3 = LivreDao.getLivreByCote("ISBN99999").getLivre();
 		if (l3 != null) {
 			l3.affiche();
 		}
@@ -42,7 +42,7 @@ public class LivreTest {
 		System.out.println("=== updateTitreLivre ===");
 		int majTitre = LivreDao.updateTitreLivre("ISBN99999", "Les Misérables - Tome 1");
 		System.out.println("Lignes mises à jour : " + majTitre);
-		Livre l4 = LivreDao.getLivreByCote("ISBN99999");
+		Livre l4 = LivreDao.getLivreByCote("ISBN99999").getLivre();
 		if (l4 != null) {
 			l4.affiche();
 		}
@@ -50,7 +50,7 @@ public class LivreTest {
 		System.out.println("=== updateEmprunteurLivre (emprunt) ===");
 		int majEmprunteur = LivreDao.updateEmprunteurLivre("ISBN99999", "AGUE001");
 		System.out.println("Lignes mises à jour : " + majEmprunteur);
-		Livre l5 = LivreDao.getLivreByCote("ISBN99999");
+		Livre l5 = LivreDao.getLivreByCote("ISBN99999").getLivre();
 		if (l5 != null) {
 			l5.affiche();
 		}
@@ -61,7 +61,7 @@ public class LivreTest {
 
 		System.out.println("=== updateEmprunteurLivre (retour) ===");
 		LivreDao.updateEmprunteurLivre("ISBN99999", null);
-		Livre l6 = LivreDao.getLivreByCote("ISBN99999");
+		Livre l6 = LivreDao.getLivreByCote("ISBN99999").getLivre();
 		if (l6 != null) {
 			l6.affiche();
 		}
@@ -77,7 +77,7 @@ public class LivreTest {
 		System.out.println("=== deleteLivreByCote ===");
 		int suppr = LivreDao.deleteLivreByCote("ISBN99999");
 		System.out.println("Lignes supprimées : " + suppr);
-		Livre l7 = LivreDao.getLivreByCote("ISBN99999");
+		Livre l7 = LivreDao.getLivreByCote("ISBN99999").getLivre();
 		if (l7 == null) {
 			System.out.println("ISBN99999 a bien été supprimé");
 		}

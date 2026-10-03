@@ -9,12 +9,15 @@ import java.util.List;
 import com.crea.jee.beans.Eleve;
 import com.crea.jee.utils.DBAction;
 import com.crea.jee.utils.Validation;
+import com.crea.jee.wrappers.EleveWrapper;
+import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table eleve
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
  * -1 = erreur SQL, -2 = numéro déjà existant, -3 = données invalides (refusées avant tout accès à la base)
- * Les méthodes de lecture retournent null (ou une liste vide) si rien n'est trouvé ou en cas d'erreur
+ * Les lectures d'un seul élève retournent un EleveWrapper (l'élève + un code réponse, voir Wrapper)
+ * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
 public class EleveDao {
 
@@ -24,24 +27,29 @@ public class EleveDao {
 				rs.getString("adresse"));
 	}
 
-	// récupère un élève à partir de son numéro
-	public static Eleve getEleveByNum(String num) {
-		Eleve e = null;
+	// récupère un élève à partir de son numéro, avec le code réponse de la recherche
+	public static EleveWrapper getEleveByNum(String num) {
+		if (!Validation.estValide(num, 100)) {
+			return new EleveWrapper(null, Wrapper.DONNEES_INVALIDES);
+		}
+		if (DBAction.DBConnexion() != null) {
+			return new EleveWrapper(null, Wrapper.ERREUR_BASE);
+		}
 		String request = "SELECT * FROM eleve WHERE num = ?";
-		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, num);
 			try (ResultSet response = ps.executeQuery()) {
 				if (response.next()) {
-					e = mapResultSet(response);
+					return new EleveWrapper(mapResultSet(response), Wrapper.TROUVE);
 				}
+				return new EleveWrapper(null, Wrapper.NON_TROUVE);
 			}
 		} catch (SQLException ex) {
 			System.out.println(ex.getMessage());
+			return new EleveWrapper(null, Wrapper.ERREUR_BASE);
 		} finally {
 			DBAction.DBClose();
 		}
-		return e;
 	}
 
 	// récupère la liste des élèves portant un nom donné
@@ -64,24 +72,29 @@ public class EleveDao {
 		return liste;
 	}
 
-	// récupère l'élève qui occupe une chambre donnée
-	public static Eleve getEleveByNo(int no) {
-		Eleve e = null;
+	// récupère l'élève qui occupe une chambre donnée, avec le code réponse de la recherche
+	public static EleveWrapper getEleveByNo(int no) {
+		if (!Validation.estPositif(no)) {
+			return new EleveWrapper(null, Wrapper.DONNEES_INVALIDES);
+		}
+		if (DBAction.DBConnexion() != null) {
+			return new EleveWrapper(null, Wrapper.ERREUR_BASE);
+		}
 		String request = "SELECT * FROM eleve WHERE no = ?";
-		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setInt(1, no);
 			try (ResultSet response = ps.executeQuery()) {
 				if (response.next()) {
-					e = mapResultSet(response);
+					return new EleveWrapper(mapResultSet(response), Wrapper.TROUVE);
 				}
+				return new EleveWrapper(null, Wrapper.NON_TROUVE);
 			}
 		} catch (SQLException ex) {
 			System.out.println(ex.getMessage());
+			return new EleveWrapper(null, Wrapper.ERREUR_BASE);
 		} finally {
 			DBAction.DBClose();
 		}
-		return e;
 	}
 
 	/*

@@ -9,12 +9,15 @@ import java.util.List;
 import com.crea.jee.beans.Chambre;
 import com.crea.jee.utils.DBAction;
 import com.crea.jee.utils.Validation;
+import com.crea.jee.wrappers.ChambreWrapper;
+import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table chambre
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
  * -1 = erreur SQL, -2 = numéro déjà existant, -3 = données invalides (refusées avant tout accès à la base)
- * Les méthodes de lecture retournent null (ou une liste vide) si rien n'est trouvé ou en cas d'erreur
+ * Les lectures d'une seule chambre retournent un ChambreWrapper (la chambre + un code réponse, voir Wrapper)
+ * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
 public class ChambreDao {
 
@@ -23,44 +26,54 @@ public class ChambreDao {
 		return new Chambre(rs.getInt("no"), rs.getString("num"), rs.getFloat("prix"));
 	}
 
-	// récupère une chambre à partir de son numéro
-	public static Chambre getChambreByNo(int no) {
-		Chambre c = null;
+	// récupère une chambre à partir de son numéro, avec le code réponse de la recherche
+	public static ChambreWrapper getChambreByNo(int no) {
+		if (!Validation.estPositif(no)) {
+			return new ChambreWrapper(null, Wrapper.DONNEES_INVALIDES);
+		}
+		if (DBAction.DBConnexion() != null) {
+			return new ChambreWrapper(null, Wrapper.ERREUR_BASE);
+		}
 		String request = "SELECT * FROM chambre WHERE no = ?";
-		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setInt(1, no);
 			try (ResultSet response = ps.executeQuery()) {
 				if (response.next()) {
-					c = mapResultSet(response);
+					return new ChambreWrapper(mapResultSet(response), Wrapper.TROUVE);
 				}
+				return new ChambreWrapper(null, Wrapper.NON_TROUVE);
 			}
 		} catch (SQLException ex) {
 			System.out.println(ex.getMessage());
+			return new ChambreWrapper(null, Wrapper.ERREUR_BASE);
 		} finally {
 			DBAction.DBClose();
 		}
-		return c;
 	}
 
-	// récupère la chambre occupée par un élève donné
-	public static Chambre getChambreByOccupant(String num) {
-		Chambre c = null;
+	// récupère la chambre occupée par un élève donné, avec le code réponse de la recherche
+	public static ChambreWrapper getChambreByOccupant(String num) {
+		if (!Validation.estValide(num, 100)) {
+			return new ChambreWrapper(null, Wrapper.DONNEES_INVALIDES);
+		}
+		if (DBAction.DBConnexion() != null) {
+			return new ChambreWrapper(null, Wrapper.ERREUR_BASE);
+		}
 		String request = "SELECT * FROM chambre WHERE num = ?";
-		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, num);
 			try (ResultSet response = ps.executeQuery()) {
 				if (response.next()) {
-					c = mapResultSet(response);
+					return new ChambreWrapper(mapResultSet(response), Wrapper.TROUVE);
 				}
+				return new ChambreWrapper(null, Wrapper.NON_TROUVE);
 			}
 		} catch (SQLException ex) {
 			System.out.println(ex.getMessage());
+			return new ChambreWrapper(null, Wrapper.ERREUR_BASE);
 		} finally {
 			DBAction.DBClose();
 		}
-		return c;
 	}
 
 	/*

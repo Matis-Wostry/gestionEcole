@@ -1,4 +1,4 @@
-package com.crea.jee.wrappers;
+package com.crea.jee.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -21,6 +21,8 @@ import com.crea.jee.dao.ChambreDao;
 import com.crea.jee.dao.EleveDao;
 import com.crea.jee.dao.InscritDao;
 import com.crea.jee.dao.LivreDao;
+import com.crea.jee.wrappers.EleveWrapper;
+import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Tests unitaires de EleveDao
@@ -46,7 +48,7 @@ class EleveDaoTest {
 		int resultAjout = EleveDao.addEleve(nouvelEleve);
 		assertEquals(1, resultAjout);
 
-		Eleve recupere = EleveDao.getEleveByNum("TEST001");
+		Eleve recupere = EleveDao.getEleveByNum("TEST001").getEleve();
 		assertNotNull(recupere);
 		assertEquals("Testeur Un", recupere.getNom());
 		assertEquals(25, recupere.getAge());
@@ -70,14 +72,37 @@ class EleveDaoTest {
 		assertEquals(-3, EleveDao.addEleve(new Eleve("TEST002", 0, "", 25, "Adresse")));
 		assertEquals(-3, EleveDao.addEleve(new Eleve("TEST003", 0, "Nom", -5, "Adresse")));
 
-		assertNull(EleveDao.getEleveByNum("TEST002"));
-		assertNull(EleveDao.getEleveByNum("TEST003"));
+		assertEquals(Wrapper.NON_TROUVE, EleveDao.getEleveByNum("TEST002").getCodeResponse());
+		assertEquals(Wrapper.NON_TROUVE, EleveDao.getEleveByNum("TEST003").getCodeResponse());
 	}
 
 	@Test
-	@DisplayName("[ERREUR] getEleveByNum : un numéro inconnu renvoie null")
-	void getEleveByNum_inconnu_retourneNull() {
-		assertNull(EleveDao.getEleveByNum("INCONNU999"));
+	@DisplayName("[ERREUR] getEleveByNum : un numéro inconnu renvoie le code NON_TROUVE (0) et aucun élève")
+	void getEleveByNum_inconnu_codeNonTrouve() {
+		EleveWrapper resultat = EleveDao.getEleveByNum("INCONNU999");
+
+		assertEquals(Wrapper.NON_TROUVE, resultat.getCodeResponse());
+		assertNull(resultat.getEleve());
+	}
+
+	@Test
+	@DisplayName("[OK] getEleveByNum : un élève existant est renvoyé avec le code TROUVE (1)")
+	void getEleveByNum_existant_codeTrouve() {
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+
+		EleveWrapper resultat = EleveDao.getEleveByNum("TEST001");
+
+		assertEquals(Wrapper.TROUVE, resultat.getCodeResponse());
+		assertEquals("TEST001", resultat.getEleve().getNum());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] getEleveByNum : un numéro vide est refusé (code -3) sans interroger la base")
+	void getEleveByNum_numInvalide_codeDonneesInvalides() {
+		EleveWrapper resultat = EleveDao.getEleveByNum("");
+
+		assertEquals(Wrapper.DONNEES_INVALIDES, resultat.getCodeResponse());
+		assertNull(resultat.getEleve());
 	}
 
 	@Test
@@ -88,7 +113,7 @@ class EleveDaoTest {
 		int nbLignes = EleveDao.updateAdresseEleve("TEST001", "Nouvelle adresse");
 
 		assertEquals(1, nbLignes);
-		assertEquals("Nouvelle adresse", EleveDao.getEleveByNum("TEST001").getAdresse());
+		assertEquals("Nouvelle adresse", EleveDao.getEleveByNum("TEST001").getEleve().getAdresse());
 	}
 
 	@Test
@@ -99,7 +124,7 @@ class EleveDaoTest {
 		int resultat = EleveDao.updateAdresseEleve("TEST001", "");
 
 		assertEquals(-3, resultat);
-		assertEquals("Ancienne adresse", EleveDao.getEleveByNum("TEST001").getAdresse());
+		assertEquals("Ancienne adresse", EleveDao.getEleveByNum("TEST001").getEleve().getAdresse());
 	}
 
 	@Test
@@ -110,8 +135,8 @@ class EleveDaoTest {
 		int nbLignes = EleveDao.updateNumEleve("TEST001", "TEST001B");
 
 		assertEquals(1, nbLignes);
-		assertNull(EleveDao.getEleveByNum("TEST001"));
-		assertNotNull(EleveDao.getEleveByNum("TEST001B"));
+		assertEquals(Wrapper.NON_TROUVE, EleveDao.getEleveByNum("TEST001").getCodeResponse());
+		assertEquals(Wrapper.TROUVE, EleveDao.getEleveByNum("TEST001B").getCodeResponse());
 	}
 
 	@Test
@@ -123,7 +148,7 @@ class EleveDaoTest {
 		int resultat = EleveDao.updateNumEleve("TEST001", "TEST002");
 
 		assertEquals(-2, resultat);
-		assertNotNull(EleveDao.getEleveByNum("TEST001"));
+		assertEquals(Wrapper.TROUVE, EleveDao.getEleveByNum("TEST001").getCodeResponse());
 	}
 
 	@Test
@@ -134,13 +159,19 @@ class EleveDaoTest {
 		int resultat = EleveDao.updateNumEleve("TEST001", "");
 
 		assertEquals(-3, resultat);
-		assertNotNull(EleveDao.getEleveByNum("TEST001"));
+		assertEquals(Wrapper.TROUVE, EleveDao.getEleveByNum("TEST001").getCodeResponse());
 	}
 
 	@Test
-	@DisplayName("[ERREUR] getEleveByNo : une chambre sans occupant renvoie null")
-	void getEleveByNo_inconnue_retourneNull() {
-		assertNull(EleveDao.getEleveByNo(99999));
+	@DisplayName("[ERREUR] getEleveByNo : une chambre sans occupant renvoie le code NON_TROUVE (0)")
+	void getEleveByNo_inconnue_codeNonTrouve() {
+		assertEquals(Wrapper.NON_TROUVE, EleveDao.getEleveByNo(99999).getCodeResponse());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] getEleveByNo : un numéro de chambre à 0 est refusé (code -3)")
+	void getEleveByNo_noInvalide_codeDonneesInvalides() {
+		assertEquals(Wrapper.DONNEES_INVALIDES, EleveDao.getEleveByNo(0).getCodeResponse());
 	}
 
 	// eleve.no n'est modifiable par aucune méthode publique d'EleveDao : on le positionne directement en SQL
@@ -152,7 +183,7 @@ class EleveDaoTest {
 
 		BaseDeTest.executer("UPDATE eleve SET no = ? WHERE num = ?", 999, "TEST001");
 
-		Eleve occupant = EleveDao.getEleveByNo(999);
+		Eleve occupant = EleveDao.getEleveByNo(999).getEleve();
 
 		assertNotNull(occupant);
 		assertEquals("TEST001", occupant.getNum());
@@ -213,7 +244,7 @@ class EleveDaoTest {
 		int nbSupprimes = EleveDao.deleteEleveByNum("TEST001");
 
 		assertEquals(1, nbSupprimes);
-		assertNull(EleveDao.getEleveByNum("TEST001"));
+		assertEquals(Wrapper.NON_TROUVE, EleveDao.getEleveByNum("TEST001").getCodeResponse());
 	}
 
 	@Test
@@ -242,13 +273,13 @@ class EleveDaoTest {
 		int nbSupprimes = EleveDao.deleteEleveByNum("TEST001");
 
 		assertEquals(1, nbSupprimes);
-		assertNull(EleveDao.getEleveByNum("TEST001"));
+		assertEquals(Wrapper.NON_TROUVE, EleveDao.getEleveByNum("TEST001").getCodeResponse());
 
-		Chambre chambre = ChambreDao.getChambreByNo(999);
+		Chambre chambre = ChambreDao.getChambreByNo(999).getChambre();
 		assertNotNull(chambre);
 		assertNull(chambre.getNum());
 
-		Livre livre = LivreDao.getLivreByCote("COTE_TEST");
+		Livre livre = LivreDao.getLivreByCote("COTE_TEST").getLivre();
 		assertNotNull(livre);
 		assertNull(livre.getNum());
 		assertNull(livre.getDatepret());

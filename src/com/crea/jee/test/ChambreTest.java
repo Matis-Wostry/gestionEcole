@@ -9,13 +9,13 @@ import com.crea.jee.dao.ChambreDao;
  * Test manuel de ChambreDao : appelle chaque méthode et affiche le résultat dans la console
  * Prévu pour les données de démo de la base ecole (AGUE001 sert d'occupant) : la chambre de test 100
  * est supprimée à la fin, la base revient à son état initial
- * Version automatisée avec vérifications : com.crea.jee.wrappers.ChambreDaoTest
+ * Version automatisée avec vérifications : com.crea.jee.junit.ChambreDaoTest
  */
 public class ChambreTest {
 	public static void main(String[] args) {
 
 		System.out.println("=== getChambreByNo ===");
-		Chambre c1 = ChambreDao.getChambreByNo(1);
+		Chambre c1 = ChambreDao.getChambreByNo(1).getChambre();
 		if (c1 != null) {
 			c1.affiche();
 		} else {
@@ -34,7 +34,7 @@ public class ChambreTest {
 		}
 
 		System.out.println("=== getChambreByNo (après ajout) ===");
-		Chambre c3 = ChambreDao.getChambreByNo(100);
+		Chambre c3 = ChambreDao.getChambreByNo(100).getChambre();
 		if (c3 != null) {
 			c3.affiche();
 		}
@@ -42,7 +42,7 @@ public class ChambreTest {
 		System.out.println("=== updatePrixChambre ===");
 		int majPrix = ChambreDao.updatePrixChambre(100, 300.0f);
 		System.out.println("Lignes mises à jour : " + majPrix);
-		Chambre c4 = ChambreDao.getChambreByNo(100);
+		Chambre c4 = ChambreDao.getChambreByNo(100).getChambre();
 		if (c4 != null) {
 			c4.affiche();
 		}
@@ -50,13 +50,13 @@ public class ChambreTest {
 		System.out.println("=== updateOccupantChambre ===");
 		int majOccupant = ChambreDao.updateOccupantChambre(100, "AGUE001");
 		System.out.println("Lignes mises à jour : " + majOccupant);
-		Chambre c5 = ChambreDao.getChambreByNo(100);
+		Chambre c5 = ChambreDao.getChambreByNo(100).getChambre();
 		if (c5 != null) {
 			c5.affiche();
 		}
 
 		System.out.println("=== getChambreByOccupant ===");
-		Chambre c6 = ChambreDao.getChambreByOccupant("AGUE001");
+		Chambre c6 = ChambreDao.getChambreByOccupant("AGUE001").getChambre();
 		if (c6 != null) {
 			c6.affiche();
 		} else {
@@ -78,7 +78,7 @@ public class ChambreTest {
 		System.out.println("=== deleteChambreByNo ===");
 		int suppr = ChambreDao.deleteChambreByNo(100);
 		System.out.println("Lignes supprimées : " + suppr);
-		Chambre c7 = ChambreDao.getChambreByNo(100);
+		Chambre c7 = ChambreDao.getChambreByNo(100).getChambre();
 		if (c7 == null) {
 			System.out.println("Chambre 100 a bien été supprimée");
 		}

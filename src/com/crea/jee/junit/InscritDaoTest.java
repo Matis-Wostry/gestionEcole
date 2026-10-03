@@ -1,4 +1,4 @@
-package com.crea.jee.wrappers;
+package com.crea.jee.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

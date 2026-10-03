@@ -1,4 +1,4 @@
-package com.crea.jee.wrappers;
+package com.crea.jee.junit;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

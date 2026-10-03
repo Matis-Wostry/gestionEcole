@@ -10,12 +10,15 @@ import java.util.List;
 import com.crea.jee.beans.Livre;
 import com.crea.jee.utils.DBAction;
 import com.crea.jee.utils.Validation;
+import com.crea.jee.wrappers.LivreWrapper;
+import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table livre
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
  * -1 = erreur SQL, -2 = cote déjà existante, -3 = données invalides (refusées avant tout accès à la base)
- * Les méthodes de lecture retournent null (ou une liste vide) si rien n'est trouvé ou en cas d'erreur
+ * Les lectures d'un seul livre retournent un LivreWrapper (le livre + un code réponse, voir Wrapper)
+ * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
 public class LivreDao {
 
@@ -25,24 +28,29 @@ public class LivreDao {
 				rs.getTimestamp("datepret"));
 	}
 
-	// récupère un livre à partir de sa cote
-	public static Livre getLivreByCote(String cote) {
-		Livre l = null;
+	// récupère un livre à partir de sa cote, avec le code réponse de la recherche
+	public static LivreWrapper getLivreByCote(String cote) {
+		if (!Validation.estValide(cote, 100)) {
+			return new LivreWrapper(null, Wrapper.DONNEES_INVALIDES);
+		}
+		if (DBAction.DBConnexion() != null) {
+			return new LivreWrapper(null, Wrapper.ERREUR_BASE);
+		}
 		String request = "SELECT * FROM livre WHERE cote = ?";
-		DBAction.DBConnexion();
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, cote);
 			try (ResultSet response = ps.executeQuery()) {
 				if (response.next()) {
-					l = mapResultSet(response);
+					return new LivreWrapper(mapResultSet(response), Wrapper.TROUVE);
 				}
+				return new LivreWrapper(null, Wrapper.NON_TROUVE);
 			}
 		} catch (SQLException ex) {
 			System.out.println(ex.getMessage());
+			return new LivreWrapper(null, Wrapper.ERREUR_BASE);
 		} finally {
 			DBAction.DBClose();
 		}
-		return l;
 	}
 
 	// récupère la liste des livres empruntés par un élève donné

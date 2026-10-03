@@ -9,20 +9,20 @@ import com.crea.jee.dao.EleveDao;
  * Test manuel de EleveDao : appelle chaque méthode et affiche le résultat dans la console
  * Prévu pour les données de démo de la base ecole (AGUE001...) : l'élève de test MOMO88
  * (renommé MOMO89 en cours de route) est supprimé à la fin, la base revient à son état initial
- * Version automatisée avec vérifications : com.crea.jee.wrappers.EleveDaoTest
+ * Version automatisée avec vérifications : com.crea.jee.junit.EleveDaoTest
  */
 public class EleveTest {
 	public static void main(String[] args) {
 
 		System.out.println("=== getEleveByNum ===");
-		Eleve e1 = EleveDao.getEleveByNum("AGUE001");
+		Eleve e1 = EleveDao.getEleveByNum("AGUE001").getEleve();
 		if (e1 != null) {
 			e1.affiche();
 		} else {
 			System.out.println("L'élève AGUE001 n'est pas dans la liste");
 		}
 
-		Eleve e2 = EleveDao.getEleveByNum("JULIA002");
+		Eleve e2 = EleveDao.getEleveByNum("JULIA002").getEleve();
 		if (e2 != null) {
 			e2.affiche();
 		} else {
@@ -41,7 +41,7 @@ public class EleveTest {
 		}
 
 		System.out.println("=== getEleveByNum (après ajout) ===");
-		Eleve e4 = EleveDao.getEleveByNum("MOMO88");
+		Eleve e4 = EleveDao.getEleveByNum("MOMO88").getEleve();
 		if (e4 != null) {
 			e4.affiche();
 		} else {
@@ -55,7 +55,7 @@ public class EleveTest {
 		System.out.println("=== updateAdresseEleve ===");
 		int majAdresse = EleveDao.updateAdresseEleve("MOMO88", "10 Rue Nouvelle");
 		System.out.println("Lignes mises à jour : " + majAdresse);
-		Eleve e5 = EleveDao.getEleveByNum("MOMO88");
+		Eleve e5 = EleveDao.getEleveByNum("MOMO88").getEleve();
 		if (e5 != null) {
 			e5.affiche();
 		}
@@ -63,13 +63,13 @@ public class EleveTest {
 		System.out.println("=== updateNumEleve ===");
 		int majNum = EleveDao.updateNumEleve("MOMO88", "MOMO89");
 		System.out.println("Lignes mises à jour : " + majNum);
-		Eleve e6 = EleveDao.getEleveByNum("MOMO89");
+		Eleve e6 = EleveDao.getEleveByNum("MOMO89").getEleve();
 		if (e6 != null) {
 			e6.affiche();
 		}
 
 		System.out.println("=== getEleveByNo ===");
-		Eleve occupant = EleveDao.getEleveByNo(1);
+		Eleve occupant = EleveDao.getEleveByNo(1).getEleve();
 		if (occupant != null) {
 			occupant.affiche();
 		} else {
@@ -87,7 +87,7 @@ public class EleveTest {
 		System.out.println("=== deleteEleveByNum ===");
 		int suppr = EleveDao.deleteEleveByNum("MOMO89");
 		System.out.println("Lignes supprimées : " + suppr);
-		Eleve e7 = EleveDao.getEleveByNum("MOMO89");
+		Eleve e7 = EleveDao.getEleveByNum("MOMO89").getEleve();
 		if (e7 == null) {
 			System.out.println("MOMO89 a bien été supprimé");
 		}

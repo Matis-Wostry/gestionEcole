@@ -1,4 +1,4 @@
-package com.crea.jee.wrappers;
+package com.crea.jee.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -17,6 +17,8 @@ import com.crea.jee.beans.Eleve;
 import com.crea.jee.beans.Livre;
 import com.crea.jee.dao.EleveDao;
 import com.crea.jee.dao.LivreDao;
+import com.crea.jee.wrappers.LivreWrapper;
+import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Tests unitaires de LivreDao, contre la base ecole_test (-Ddb.name=ecole_test)
@@ -37,7 +39,7 @@ class LivreDaoTest {
 		int resultat = LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 
 		assertEquals(1, resultat);
-		Livre recupere = LivreDao.getLivreByCote("ISBN_TEST1");
+		Livre recupere = LivreDao.getLivreByCote("ISBN_TEST1").getLivre();
 		assertNotNull(recupere);
 		assertEquals("Titre Un", recupere.getTitre());
 		assertNull(recupere.getNum());
@@ -58,13 +60,36 @@ class LivreDaoTest {
 		assertEquals(-3, LivreDao.addLivre(new Livre("", null, "Titre", null)));
 		assertEquals(-3, LivreDao.addLivre(new Livre("ISBN_TEST2", null, "  ", null)));
 
-		assertNull(LivreDao.getLivreByCote("ISBN_TEST2"));
+		assertEquals(Wrapper.NON_TROUVE, LivreDao.getLivreByCote("ISBN_TEST2").getCodeResponse());
 	}
 
 	@Test
-	@DisplayName("[ERREUR] getLivreByCote : une cote inconnue renvoie null")
-	void getLivreByCote_inconnu_retourneNull() {
-		assertNull(LivreDao.getLivreByCote("INCONNU999"));
+	@DisplayName("[ERREUR] getLivreByCote : une cote inconnue renvoie le code NON_TROUVE (0) et aucun livre")
+	void getLivreByCote_inconnu_codeNonTrouve() {
+		LivreWrapper resultat = LivreDao.getLivreByCote("INCONNU999");
+
+		assertEquals(Wrapper.NON_TROUVE, resultat.getCodeResponse());
+		assertNull(resultat.getLivre());
+	}
+
+	@Test
+	@DisplayName("[OK] getLivreByCote : un livre existant est renvoyé avec le code TROUVE (1)")
+	void getLivreByCote_existant_codeTrouve() {
+		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
+
+		LivreWrapper resultat = LivreDao.getLivreByCote("ISBN_TEST1");
+
+		assertEquals(Wrapper.TROUVE, resultat.getCodeResponse());
+		assertEquals("Titre Un", resultat.getLivre().getTitre());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] getLivreByCote : une cote vide est refusée (code -3) sans interroger la base")
+	void getLivreByCote_coteInvalide_codeDonneesInvalides() {
+		LivreWrapper resultat = LivreDao.getLivreByCote("");
+
+		assertEquals(Wrapper.DONNEES_INVALIDES, resultat.getCodeResponse());
+		assertNull(resultat.getLivre());
 	}
 
 	@Test
@@ -75,7 +100,7 @@ class LivreDaoTest {
 
 		assertEquals(1, LivreDao.updateEmprunteurLivre("ISBN_TEST1", "TEST001"));
 
-		Livre emprunte = LivreDao.getLivreByCote("ISBN_TEST1");
+		Livre emprunte = LivreDao.getLivreByCote("ISBN_TEST1").getLivre();
 		assertEquals("TEST001", emprunte.getNum());
 		assertNotNull(emprunte.getDatepret());
 	}
@@ -89,7 +114,7 @@ class LivreDaoTest {
 
 		assertEquals(1, LivreDao.updateEmprunteurLivre("ISBN_TEST1", null));
 
-		Livre rendu = LivreDao.getLivreByCote("ISBN_TEST1");
+		Livre rendu = LivreDao.getLivreByCote("ISBN_TEST1").getLivre();
 		assertNull(rendu.getNum());
 		assertNull(rendu.getDatepret());
 	}
@@ -100,7 +125,7 @@ class LivreDaoTest {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 
 		assertEquals(-1, LivreDao.updateEmprunteurLivre("ISBN_TEST1", "INCONNU999"));
-		assertNull(LivreDao.getLivreByCote("ISBN_TEST1").getNum());
+		assertNull(LivreDao.getLivreByCote("ISBN_TEST1").getLivre().getNum());
 	}
 
 	@Test
@@ -128,7 +153,7 @@ class LivreDaoTest {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Ancien titre", null));
 
 		assertEquals(1, LivreDao.updateTitreLivre("ISBN_TEST1", "Nouveau titre"));
-		assertEquals("Nouveau titre", LivreDao.getLivreByCote("ISBN_TEST1").getTitre());
+		assertEquals("Nouveau titre", LivreDao.getLivreByCote("ISBN_TEST1").getLivre().getTitre());
 	}
 
 	@Test
@@ -137,7 +162,7 @@ class LivreDaoTest {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Ancien titre", null));
 
 		assertEquals(-3, LivreDao.updateTitreLivre("ISBN_TEST1", ""));
-		assertEquals("Ancien titre", LivreDao.getLivreByCote("ISBN_TEST1").getTitre());
+		assertEquals("Ancien titre", LivreDao.getLivreByCote("ISBN_TEST1").getLivre().getTitre());
 	}
 
 	@Test
@@ -169,7 +194,7 @@ class LivreDaoTest {
 		LivreDao.addLivre(new Livre("ISBN_TEST1", null, "Titre Un", null));
 
 		assertEquals(1, LivreDao.deleteLivreByCote("ISBN_TEST1"));
-		assertNull(LivreDao.getLivreByCote("ISBN_TEST1"));
+		assertEquals(Wrapper.NON_TROUVE, LivreDao.getLivreByCote("ISBN_TEST1").getCodeResponse());
 	}
 
 	@Test

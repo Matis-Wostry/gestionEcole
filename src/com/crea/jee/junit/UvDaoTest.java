@@ -1,4 +1,4 @@
-package com.crea.jee.wrappers;
+package com.crea.jee.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -18,6 +18,8 @@ import com.crea.jee.beans.Uv;
 import com.crea.jee.dao.EleveDao;
 import com.crea.jee.dao.InscritDao;
 import com.crea.jee.dao.UvDao;
+import com.crea.jee.wrappers.UvWrapper;
+import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Tests unitaires de UvDao, contre la base ecole_test (-Ddb.name=ecole_test)
@@ -42,7 +44,7 @@ class UvDaoTest {
 	void getUvByCode_retourneLUv() throws SQLException {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
-		Uv uv = UvDao.getUvByCode("UV_TEST1");
+		Uv uv = UvDao.getUvByCode("UV_TEST1").getUv();
 
 		assertNotNull(uv);
 		assertEquals(30, uv.getNbh());
@@ -50,9 +52,32 @@ class UvDaoTest {
 	}
 
 	@Test
-	@DisplayName("[ERREUR] getUvByCode : un code inconnu renvoie null")
-	void getUvByCode_inconnue_retourneNull() {
-		assertNull(UvDao.getUvByCode("INCONNU999"));
+	@DisplayName("[ERREUR] getUvByCode : un code inconnu renvoie le code NON_TROUVE (0) et aucune UV")
+	void getUvByCode_inconnue_codeNonTrouve() {
+		UvWrapper resultat = UvDao.getUvByCode("INCONNU999");
+
+		assertEquals(Wrapper.NON_TROUVE, resultat.getCodeResponse());
+		assertNull(resultat.getUv());
+	}
+
+	@Test
+	@DisplayName("[OK] getUvByCode : une UV existante est renvoyée avec le code TROUVE (1)")
+	void getUvByCode_existante_codeTrouve() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+
+		UvWrapper resultat = UvDao.getUvByCode("UV_TEST1");
+
+		assertEquals(Wrapper.TROUVE, resultat.getCodeResponse());
+		assertEquals("UV_TEST1", resultat.getUv().getCode());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] getUvByCode : un code vide est refusé (code -3) sans interroger la base")
+	void getUvByCode_codeInvalide_codeDonneesInvalides() {
+		UvWrapper resultat = UvDao.getUvByCode("");
+
+		assertEquals(Wrapper.DONNEES_INVALIDES, resultat.getCodeResponse());
+		assertNull(resultat.getUv());
 	}
 
 	@Test
@@ -61,7 +86,7 @@ class UvDaoTest {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
 		assertEquals(1, UvDao.updateNbhUv("UV_TEST1", 45));
-		assertEquals(45, UvDao.getUvByCode("UV_TEST1").getNbh());
+		assertEquals(45, UvDao.getUvByCode("UV_TEST1").getUv().getNbh());
 	}
 
 	@Test
@@ -71,7 +96,7 @@ class UvDaoTest {
 
 		assertEquals(-3, UvDao.updateNbhUv("UV_TEST1", 0));
 		assertEquals(-3, UvDao.updateNbhUv("UV_TEST1", 200));
-		assertEquals(30, UvDao.getUvByCode("UV_TEST1").getNbh());
+		assertEquals(30, UvDao.getUvByCode("UV_TEST1").getUv().getNbh());
 	}
 
 	@Test
@@ -80,7 +105,7 @@ class UvDaoTest {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
 		assertEquals(1, UvDao.updateCoordUv("UV_TEST1", "Mme Nouvelle"));
-		assertEquals("Mme Nouvelle", UvDao.getUvByCode("UV_TEST1").getCoord());
+		assertEquals("Mme Nouvelle", UvDao.getUvByCode("UV_TEST1").getUv().getCoord());
 	}
 
 	@Test
@@ -89,7 +114,7 @@ class UvDaoTest {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
 		assertEquals(-3, UvDao.updateCoordUv("UV_TEST1", "x".repeat(256)));
-		assertEquals("Mr Test", UvDao.getUvByCode("UV_TEST1").getCoord());
+		assertEquals("Mr Test", UvDao.getUvByCode("UV_TEST1").getUv().getCoord());
 	}
 
 	@Test
@@ -128,7 +153,7 @@ class UvDaoTest {
 		ajouterUv("UV_TEST1", 30, "Mr Test");
 
 		assertEquals(1, UvDao.deleteUvByCode("UV_TEST1"));
-		assertNull(UvDao.getUvByCode("UV_TEST1"));
+		assertEquals(Wrapper.NON_TROUVE, UvDao.getUvByCode("UV_TEST1").getCodeResponse());
 	}
 
 	@Test
@@ -148,7 +173,7 @@ class UvDaoTest {
 
 		assertEquals(1, UvDao.deleteUvByCode("UV_TEST1"));
 
-		assertNull(UvDao.getUvByCode("UV_TEST1"));
+		assertEquals(Wrapper.NON_TROUVE, UvDao.getUvByCode("UV_TEST1").getCodeResponse());
 		assertEquals(1, InscritDao.getAllInscriptions().size());
 		assertEquals("UV_TEST2", InscritDao.getAllInscriptions().get(0).getCode());
 	}

@@ -1,4 +1,4 @@
-package com.crea.jee.wrappers;
+package com.crea.jee.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,6 +16,8 @@ import com.crea.jee.beans.Chambre;
 import com.crea.jee.beans.Eleve;
 import com.crea.jee.dao.ChambreDao;
 import com.crea.jee.dao.EleveDao;
+import com.crea.jee.wrappers.ChambreWrapper;
+import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Tests unitaires de ChambreDao, contre la base ecole_test (-Ddb.name=ecole_test)
@@ -38,7 +40,7 @@ class ChambreDaoTest {
 		int resultat = ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
 		assertEquals(1, resultat);
-		Chambre recuperee = ChambreDao.getChambreByNo(1);
+		Chambre recuperee = ChambreDao.getChambreByNo(1).getChambre();
 		assertNotNull(recuperee);
 		assertNull(recuperee.getNum());
 		assertEquals(350.25f, recuperee.getPrix(), DELTA);
@@ -58,13 +60,36 @@ class ChambreDaoTest {
 		assertEquals(-3, ChambreDao.addChambre(new Chambre(0, null, 100f)));
 		assertEquals(-3, ChambreDao.addChambre(new Chambre(2, null, -10f)));
 
-		assertNull(ChambreDao.getChambreByNo(2));
+		assertEquals(Wrapper.NON_TROUVE, ChambreDao.getChambreByNo(2).getCodeResponse());
 	}
 
 	@Test
-	@DisplayName("[ERREUR] getChambreByNo : un numéro inconnu renvoie null")
-	void getChambreByNo_inconnue_retourneNull() {
-		assertNull(ChambreDao.getChambreByNo(99999));
+	@DisplayName("[ERREUR] getChambreByNo : un numéro inconnu renvoie le code NON_TROUVE (0) et aucune chambre")
+	void getChambreByNo_inconnue_codeNonTrouve() {
+		ChambreWrapper resultat = ChambreDao.getChambreByNo(99999);
+
+		assertEquals(Wrapper.NON_TROUVE, resultat.getCodeResponse());
+		assertNull(resultat.getChambre());
+	}
+
+	@Test
+	@DisplayName("[OK] getChambreByNo : une chambre existante est renvoyée avec le code TROUVE (1)")
+	void getChambreByNo_existante_codeTrouve() {
+		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
+
+		ChambreWrapper resultat = ChambreDao.getChambreByNo(1);
+
+		assertEquals(Wrapper.TROUVE, resultat.getCodeResponse());
+		assertEquals(1, resultat.getChambre().getNo());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] getChambreByNo : un numéro à 0 est refusé (code -3) sans interroger la base")
+	void getChambreByNo_noInvalide_codeDonneesInvalides() {
+		ChambreWrapper resultat = ChambreDao.getChambreByNo(0);
+
+		assertEquals(Wrapper.DONNEES_INVALIDES, resultat.getCodeResponse());
+		assertNull(resultat.getChambre());
 	}
 
 	@Test
@@ -74,10 +99,10 @@ class ChambreDaoTest {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
 
 		assertEquals(1, ChambreDao.updateOccupantChambre(1, "TEST001"));
-		assertEquals("TEST001", ChambreDao.getChambreByNo(1).getNum());
+		assertEquals("TEST001", ChambreDao.getChambreByNo(1).getChambre().getNum());
 
 		assertEquals(1, ChambreDao.updateOccupantChambre(1, null));
-		assertNull(ChambreDao.getChambreByNo(1).getNum());
+		assertNull(ChambreDao.getChambreByNo(1).getChambre().getNum());
 	}
 
 	@Test
@@ -86,7 +111,7 @@ class ChambreDaoTest {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
 		assertEquals(-1, ChambreDao.updateOccupantChambre(1, "INCONNU999"));
-		assertNull(ChambreDao.getChambreByNo(1).getNum());
+		assertNull(ChambreDao.getChambreByNo(1).getChambre().getNum());
 	}
 
 	@Test
@@ -96,16 +121,22 @@ class ChambreDaoTest {
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
 		ChambreDao.updateOccupantChambre(1, "TEST001");
 
-		Chambre chambre = ChambreDao.getChambreByOccupant("TEST001");
+		Chambre chambre = ChambreDao.getChambreByOccupant("TEST001").getChambre();
 
 		assertNotNull(chambre);
 		assertEquals(1, chambre.getNo());
 	}
 
 	@Test
-	@DisplayName("[ERREUR] getChambreByOccupant : un élève sans chambre renvoie null")
-	void getChambreByOccupant_sansChambre_retourneNull() {
-		assertNull(ChambreDao.getChambreByOccupant("INCONNU999"));
+	@DisplayName("[ERREUR] getChambreByOccupant : un élève sans chambre renvoie le code NON_TROUVE (0)")
+	void getChambreByOccupant_sansChambre_codeNonTrouve() {
+		assertEquals(Wrapper.NON_TROUVE, ChambreDao.getChambreByOccupant("INCONNU999").getCodeResponse());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] getChambreByOccupant : un numéro d'élève vide est refusé (code -3)")
+	void getChambreByOccupant_numInvalide_codeDonneesInvalides() {
+		assertEquals(Wrapper.DONNEES_INVALIDES, ChambreDao.getChambreByOccupant("").getCodeResponse());
 	}
 
 	@Test
@@ -114,7 +145,7 @@ class ChambreDaoTest {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
 		assertEquals(1, ChambreDao.updatePrixChambre(1, 400.5f));
-		assertEquals(400.5f, ChambreDao.getChambreByNo(1).getPrix(), DELTA);
+		assertEquals(400.5f, ChambreDao.getChambreByNo(1).getChambre().getPrix(), DELTA);
 	}
 
 	@Test
@@ -123,7 +154,7 @@ class ChambreDaoTest {
 		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
 
 		assertEquals(-3, ChambreDao.updatePrixChambre(1, 0f));
-		assertEquals(350.25f, ChambreDao.getChambreByNo(1).getPrix(), DELTA);
+		assertEquals(350.25f, ChambreDao.getChambreByNo(1).getChambre().getPrix(), DELTA);
 	}
 
 	@Test
@@ -168,7 +199,7 @@ class ChambreDaoTest {
 		ChambreDao.addChambre(new Chambre(1, null, 150f));
 
 		assertEquals(1, ChambreDao.deleteChambreByNo(1));
-		assertNull(ChambreDao.getChambreByNo(1));
+		assertEquals(Wrapper.NON_TROUVE, ChambreDao.getChambreByNo(1).getCodeResponse());
 	}
 
 	@Test
@@ -186,11 +217,11 @@ class ChambreDaoTest {
 
 		assertEquals(1, ChambreDao.deleteChambreByNo(1));
 
-		assertNull(ChambreDao.getChambreByNo(1));
-		Eleve eleve = EleveDao.getEleveByNum("TEST001");
+		assertEquals(Wrapper.NON_TROUVE, ChambreDao.getChambreByNo(1).getCodeResponse());
+		Eleve eleve = EleveDao.getEleveByNum("TEST001").getEleve();
 		assertNotNull(eleve);
 		assertEquals(0, eleve.getNo());
-		assertNull(EleveDao.getEleveByNo(1));
+		assertEquals(Wrapper.NON_TROUVE, EleveDao.getEleveByNo(1).getCodeResponse());
 	}
 
 }
