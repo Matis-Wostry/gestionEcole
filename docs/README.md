@@ -393,7 +393,7 @@ Elles renvoient un `int` :
 |---|---|
 | `1` (ou plus) | nombre de lignes modifiées |
 | `0` | aucune ligne concernée (objet non trouvé) |
-| `-1` | erreur SQL |
+| `-1` | erreur côté base (connexion impossible ou erreur SQL) |
 | `-2` | clé déjà existante (ajout ou renommage vers une clé déjà prise) |
 | `-3` | données invalides, refusées avant tout accès à la base |
 
@@ -401,7 +401,9 @@ Le cours associe `-1`, `-2` et `-3` à des erreurs « 501 », « 505 » et « 40
 
 ### Lectures de listes
 
-Elles renvoient une **liste vide** si rien ne correspond (jamais `null`).
+Elles renvoient une **liste vide** si rien ne correspond ou en cas d'erreur côté base (jamais `null`).
+
+Dans tous les cas, une base injoignable ne fait jamais planter l'application : chaque méthode vérifie la connexion avant d'envoyer sa requête.
 
 ---
 
@@ -490,8 +492,8 @@ Ce fichier [`docker-compose.yml`](../docker-compose.yml) démarre :
 
 ### Ouvrir le projet
 
+- **Eclipse** : *File > Import > General > Existing Projects into Workspace*, puis choisir ce dossier. Les fichiers `.project` et `.classpath` déclarent déjà les bibliothèques de `lib/`, et `.settings/` impose l'encodage UTF-8.
 - **IntelliJ IDEA** : ouvrir le dossier, le fichier `GestionEcole.iml` déclare déjà les bibliothèques de `lib/`.
-- **Eclipse** : créer un projet Java sur ce dossier, puis ajouter les deux fichiers `.jar` de `lib/` au *Build Path*.
 
 ### Lancer les tests
 
@@ -511,7 +513,6 @@ java -Ddb.name=ecole_test -cp "lib/*;out" org.junit.platform.console.ConsoleLaun
 ## 10. Limites connues et pistes d'amélioration
 
 - **Listes non enveloppées** : une liste vide peut signifier « aucun résultat » comme « erreur ». Un wrapper de liste lèverait l'ambiguïté.
-- **Écritures sans base disponible** : si MySQL est injoignable, les méthodes d'écriture s'arrêtent sur une exception au lieu de renvoyer `-1` comme les lectures.
 - **Connexion unique partagée** : `DBAction` garde une seule connexion statique pour toute l'application. Elle ne supportera pas plusieurs utilisateurs simultanés (front web, tests de performance) : il faudra une connexion par requête, ou un pool de connexions.
 - **Pas d'ajout d'UV ni d'inscription** : non demandé par la spécification. Les tests insèrent ces données directement en SQL.
 - **`eleve.no` et `chambre.num` non synchronisés** : attribuer une chambre via `updateOccupantChambre` ne met pas à jour `eleve.no`.

@@ -15,7 +15,7 @@ import com.crea.jee.wrappers.Wrapper;
 /*
  * Cette classe regroupe les accès en base de données liés à la table uv
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
- * -1 = erreur SQL, -3 = données invalides (refusées avant tout accès à la base)
+ * -1 = erreur côté base (connexion impossible ou erreur SQL), -3 = données invalides (refusées avant tout accès à la base)
  * Les lectures d'une seule uv retournent un UvWrapper (l'uv + un code réponse, voir Wrapper)
  * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
@@ -59,7 +59,9 @@ public class UvDao {
 	 */
 	public static int deleteUvByCode(String code) {
 		int result = -1;
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try {
 			DBAction.getCon().setAutoCommit(false);
 			try (PreparedStatement supprimeInscriptions = DBAction.getCon()
@@ -94,7 +96,9 @@ public class UvDao {
 		}
 		int result = -1;
 		String request = "UPDATE uv SET nbh = ? WHERE code = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setInt(1, nbh);
 			ps.setString(2, code);
@@ -114,7 +118,9 @@ public class UvDao {
 		}
 		int result = -1;
 		String request = "UPDATE uv SET coord = ? WHERE code = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, coord);
 			ps.setString(2, code);
@@ -131,7 +137,9 @@ public class UvDao {
 	public static List<Uv> getAllUvs() {
 		List<Uv> liste = new ArrayList<>();
 		String request = "SELECT * FROM uv";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			try (ResultSet response = ps.executeQuery()) {
 				while (response.next()) {
@@ -150,7 +158,9 @@ public class UvDao {
 	public static List<Uv> getUvsNbhSuperieur(int valeur) {
 		List<Uv> liste = new ArrayList<>();
 		String request = "SELECT * FROM uv WHERE nbh > ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setInt(1, valeur);
 			try (ResultSet response = ps.executeQuery()) {

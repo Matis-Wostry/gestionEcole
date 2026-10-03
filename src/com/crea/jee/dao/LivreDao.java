@@ -16,7 +16,7 @@ import com.crea.jee.wrappers.Wrapper;
 /*
  * Cette classe regroupe les accès en base de données liés à la table livre
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
- * -1 = erreur SQL, -2 = cote déjà existante, -3 = données invalides (refusées avant tout accès à la base)
+ * -1 = erreur côté base (connexion impossible ou erreur SQL), -2 = cote déjà existante, -3 = données invalides (refusées avant tout accès à la base)
  * Les lectures d'un seul livre retournent un LivreWrapper (le livre + un code réponse, voir Wrapper)
  * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
@@ -57,7 +57,9 @@ public class LivreDao {
 	public static List<Livre> getLivresEmpruntesByEleve(String num) {
 		List<Livre> liste = new ArrayList<>();
 		String request = "SELECT * FROM livre WHERE num = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, num);
 			try (ResultSet response = ps.executeQuery()) {
@@ -77,7 +79,9 @@ public class LivreDao {
 	public static int deleteLivreByCote(String cote) {
 		int result = -1;
 		String request = "DELETE FROM livre WHERE cote = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, cote);
 			result = ps.executeUpdate();
@@ -96,7 +100,9 @@ public class LivreDao {
 	public static int updateEmprunteurLivre(String cote, String num) {
 		int result = -1;
 		String request = "UPDATE livre SET num = ?, datepret = ? WHERE cote = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, num);
 			ps.setTimestamp(2, num != null ? new Timestamp(System.currentTimeMillis()) : null);
@@ -117,7 +123,9 @@ public class LivreDao {
 		}
 		int result = -1;
 		String request = "UPDATE livre SET titre = ? WHERE cote = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, titre);
 			ps.setString(2, cote);
@@ -137,7 +145,9 @@ public class LivreDao {
 		}
 		int result = -1;
 		String req = "INSERT INTO livre (cote, num, titre, datepret) VALUES (?, NULL, ?, NULL)";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(req)) {
 			ps.setString(1, nouveauLivre.getCote());
 			ps.setString(2, nouveauLivre.getTitre());
@@ -157,7 +167,9 @@ public class LivreDao {
 	public static List<Livre> getLivresDisponibles() {
 		List<Livre> liste = new ArrayList<>();
 		String request = "SELECT * FROM livre WHERE num IS NULL";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			try (ResultSet response = ps.executeQuery()) {
 				while (response.next()) {
@@ -176,7 +188,9 @@ public class LivreDao {
 	public static List<Livre> getAllLivres() {
 		List<Livre> liste = new ArrayList<>();
 		String request = "SELECT * FROM livre";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			try (ResultSet response = ps.executeQuery()) {
 				while (response.next()) {

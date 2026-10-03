@@ -15,7 +15,7 @@ import com.crea.jee.wrappers.Wrapper;
 /*
  * Cette classe regroupe les accès en base de données liés à la table eleve
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
- * -1 = erreur SQL, -2 = numéro déjà existant, -3 = données invalides (refusées avant tout accès à la base)
+ * -1 = erreur côté base (connexion impossible ou erreur SQL), -2 = numéro déjà existant, -3 = données invalides (refusées avant tout accès à la base)
  * Les lectures d'un seul élève retournent un EleveWrapper (l'élève + un code réponse, voir Wrapper)
  * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
@@ -56,7 +56,9 @@ public class EleveDao {
 	public static List<Eleve> getElevesByNom(String nom) {
 		List<Eleve> liste = new ArrayList<>();
 		String request = "SELECT * FROM eleve WHERE nom = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, nom);
 			try (ResultSet response = ps.executeQuery()) {
@@ -106,7 +108,9 @@ public class EleveDao {
 	 */
 	public static int deleteEleveByNum(String num) {
 		int result = -1;
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try {
 			DBAction.getCon().setAutoCommit(false);
 			try (PreparedStatement libereChambre = DBAction.getCon()
@@ -151,7 +155,9 @@ public class EleveDao {
 		}
 		int result = -1;
 		String request = "UPDATE eleve SET adresse = ? WHERE num = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, adresse);
 			ps.setString(2, num);
@@ -171,7 +177,9 @@ public class EleveDao {
 		}
 		int result = -1;
 		String request = "UPDATE eleve SET num = ? WHERE num = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, nouveauNum);
 			ps.setString(2, ancienNum);
@@ -196,7 +204,9 @@ public class EleveDao {
 		}
 		int result = -1;
 		String req = "INSERT INTO eleve (num, no, nom, age, adresse) VALUES (?, NULL, ?, ?, ?)";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(req)) {
 			ps.setString(1, nouvelEleve.getNum());
 			ps.setString(2, nouvelEleve.getNom());
@@ -218,7 +228,9 @@ public class EleveDao {
 	public static List<Eleve> getElevesByAge(int age) {
 		List<Eleve> liste = new ArrayList<>();
 		String request = "SELECT * FROM eleve WHERE age = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setInt(1, age);
 			try (ResultSet response = ps.executeQuery()) {
@@ -238,7 +250,9 @@ public class EleveDao {
 	public static List<Eleve> getAllEleves() {
 		List<Eleve> liste = new ArrayList<>();
 		String request = "SELECT * FROM eleve";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			try (ResultSet response = ps.executeQuery()) {
 				while (response.next()) {

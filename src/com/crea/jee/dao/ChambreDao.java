@@ -15,7 +15,7 @@ import com.crea.jee.wrappers.Wrapper;
 /*
  * Cette classe regroupe les accès en base de données liés à la table chambre
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
- * -1 = erreur SQL, -2 = numéro déjà existant, -3 = données invalides (refusées avant tout accès à la base)
+ * -1 = erreur côté base (connexion impossible ou erreur SQL), -2 = numéro déjà existant, -3 = données invalides (refusées avant tout accès à la base)
  * Les lectures d'une seule chambre retournent un ChambreWrapper (la chambre + un code réponse, voir Wrapper)
  * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
@@ -85,7 +85,9 @@ public class ChambreDao {
 	 */
 	public static int deleteChambreByNo(int no) {
 		int result = -1;
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try {
 			DBAction.getCon().setAutoCommit(false);
 			try (PreparedStatement libere = DBAction.getCon()
@@ -117,7 +119,9 @@ public class ChambreDao {
 	public static int updateOccupantChambre(int no, String num) {
 		int result = -1;
 		String request = "UPDATE chambre SET num = ? WHERE no = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, num);
 			ps.setInt(2, no);
@@ -137,7 +141,9 @@ public class ChambreDao {
 		}
 		int result = -1;
 		String request = "UPDATE chambre SET prix = ? WHERE no = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setFloat(1, prix);
 			ps.setInt(2, no);
@@ -157,7 +163,9 @@ public class ChambreDao {
 		}
 		int result = -1;
 		String req = "INSERT INTO chambre (no, num, prix) VALUES (?, NULL, ?)";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(req)) {
 			ps.setInt(1, nouvelleChambre.getNo());
 			ps.setFloat(2, nouvelleChambre.getPrix());
@@ -177,7 +185,9 @@ public class ChambreDao {
 	public static List<Chambre> getChambresPrixSuperieur(float prix) {
 		List<Chambre> liste = new ArrayList<>();
 		String request = "SELECT * FROM chambre WHERE prix > ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setFloat(1, prix);
 			try (ResultSet response = ps.executeQuery()) {
@@ -197,7 +207,9 @@ public class ChambreDao {
 	public static List<Chambre> getAllChambres() {
 		List<Chambre> liste = new ArrayList<>();
 		String request = "SELECT * FROM chambre";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			try (ResultSet response = ps.executeQuery()) {
 				while (response.next()) {
@@ -216,7 +228,9 @@ public class ChambreDao {
 	public static List<Chambre> getChambresNonOccupees() {
 		List<Chambre> liste = new ArrayList<>();
 		String request = "SELECT * FROM chambre WHERE num IS NULL";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			try (ResultSet response = ps.executeQuery()) {
 				while (response.next()) {

@@ -11,7 +11,7 @@ import com.crea.jee.utils.DBAction;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table inscrit
- * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou -1 en cas d'erreur SQL
+ * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou -1 en cas d'erreur côté base (connexion impossible ou erreur SQL)
  * Les méthodes de lecture retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
 public class InscritDao {
@@ -25,7 +25,9 @@ public class InscritDao {
 	public static int deleteInscription(String code, String num) {
 		int result = -1;
 		String request = "DELETE FROM inscrit WHERE code = ? AND num = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setString(1, code);
 			ps.setString(2, num);
@@ -42,7 +44,9 @@ public class InscritDao {
 	public static List<Inscrit> getAllInscriptions() {
 		List<Inscrit> liste = new ArrayList<>();
 		String request = "SELECT * FROM inscrit";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return liste;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			try (ResultSet response = ps.executeQuery()) {
 				while (response.next()) {
@@ -61,7 +65,9 @@ public class InscritDao {
 	public static int updateNoteInscrit(String code, String num, float note) {
 		int result = -1;
 		String request = "UPDATE inscrit SET note = ? WHERE code = ? AND num = ?";
-		DBAction.DBConnexion();
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
 		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
 			ps.setFloat(1, note);
 			ps.setString(2, code);
