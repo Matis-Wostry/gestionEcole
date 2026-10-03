@@ -1,0 +1,142 @@
+package com.crea.jee.wrappers;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.crea.jee.beans.Eleve;
+import com.crea.jee.beans.Uv;
+import com.crea.jee.dao.EleveDao;
+import com.crea.jee.dao.InscritDao;
+import com.crea.jee.dao.UvDao;
+
+/*
+ * Tests unitaires de UvDao, contre la base ecole_test (-Ddb.name=ecole_test)
+ * UvDao n'a pas de méthode d'ajout : les uv de test sont insérées directement en SQL
+ */
+class UvDaoTest {
+
+	@BeforeEach
+	@AfterEach
+	void viderLesTables() throws SQLException {
+		BaseDeTest.viderLesTables();
+	}
+
+	private static void ajouterUv(String code, int nbh, String coord) throws SQLException {
+		BaseDeTest.executer("INSERT INTO uv (code, nbh, coord) VALUES (?, ?, ?)", code, nbh, coord);
+	}
+
+	@Test
+	void getUvByCode_retourneLUv() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+
+		Uv uv = UvDao.getUvByCode("UV_TEST1");
+
+		assertNotNull(uv);
+		assertEquals(30, uv.getNbh());
+		assertEquals("Mr Test", uv.getCoord());
+	}
+
+	@Test
+	void getUvByCode_inconnue_retourneNull() {
+		assertNull(UvDao.getUvByCode("INCONNU999"));
+	}
+
+	@Test
+	void updateNbhUv_modifieLeNombreDHeures() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+
+		assertEquals(1, UvDao.updateNbhUv("UV_TEST1", 45));
+		assertEquals(45, UvDao.getUvByCode("UV_TEST1").getNbh());
+	}
+
+	@Test
+	void updateNbhUv_valeurInvalide_retourneMoins3() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+
+		assertEquals(-3, UvDao.updateNbhUv("UV_TEST1", 0));
+		assertEquals(-3, UvDao.updateNbhUv("UV_TEST1", 200));
+		assertEquals(30, UvDao.getUvByCode("UV_TEST1").getNbh());
+	}
+
+	@Test
+	void updateCoordUv_modifieLeCoordinateur() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+
+		assertEquals(1, UvDao.updateCoordUv("UV_TEST1", "Mme Nouvelle"));
+		assertEquals("Mme Nouvelle", UvDao.getUvByCode("UV_TEST1").getCoord());
+	}
+
+	@Test
+	void updateCoordUv_tropLong_retourneMoins3() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+
+		assertEquals(-3, UvDao.updateCoordUv("UV_TEST1", "x".repeat(256)));
+		assertEquals("Mr Test", UvDao.getUvByCode("UV_TEST1").getCoord());
+	}
+
+	@Test
+	void getAllUvs_retourneToutesLesUvs() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+		ajouterUv("UV_TEST2", 10, "Mme Test");
+
+		assertEquals(2, UvDao.getAllUvs().size());
+	}
+
+	@Test
+	void getUvsNbhSuperieur_filtreStrictement() throws SQLException {
+		ajouterUv("UV_TEST1", 10, "Mr Test");
+		ajouterUv("UV_TEST2", 26, "Mme Test");
+		ajouterUv("UV_TEST3", 30, "Mr Autre");
+
+		List<Uv> longues = UvDao.getUvsNbhSuperieur(26);
+
+		assertEquals(1, longues.size());
+		assertEquals("UV_TEST3", longues.get(0).getCode());
+	}
+
+	@Test
+	void getUvsNbhSuperieur_aucunResultat_retourneListeVide() throws SQLException {
+		ajouterUv("UV_TEST1", 10, "Mr Test");
+
+		assertTrue(UvDao.getUvsNbhSuperieur(100).isEmpty());
+	}
+
+	@Test
+	void deleteUvByCode_supprimeLUv() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+
+		assertEquals(1, UvDao.deleteUvByCode("UV_TEST1"));
+		assertNull(UvDao.getUvByCode("UV_TEST1"));
+	}
+
+	@Test
+	void deleteUvByCode_inconnue_retourneZero() {
+		assertEquals(0, UvDao.deleteUvByCode("INCONNU999"));
+	}
+
+	// la transaction doit supprimer les inscriptions de l'uv, sans toucher à celles des autres uv
+	@Test
+	void deleteUvByCode_supprimeSesInscriptions() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+		ajouterUv("UV_TEST2", 10, "Mme Test");
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+		BaseDeTest.executer("INSERT INTO inscrit (code, num, note) VALUES (?, ?, ?)", "UV_TEST1", "TEST001", 12f);
+		BaseDeTest.executer("INSERT INTO inscrit (code, num, note) VALUES (?, ?, ?)", "UV_TEST2", "TEST001", 14f);
+
+		assertEquals(1, UvDao.deleteUvByCode("UV_TEST1"));
+
+		assertNull(UvDao.getUvByCode("UV_TEST1"));
+		assertEquals(1, InscritDao.getAllInscriptions().size());
+		assertEquals("UV_TEST2", InscritDao.getAllInscriptions().get(0).getCode());
+	}
+
+}
