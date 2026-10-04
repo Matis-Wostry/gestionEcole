@@ -2,7 +2,7 @@
 
 Couche **Model** (persistance) d'une application de gestion d'école : beans, DAO JDBC, wrappers et tests unitaires JUnit, sur une base MySQL.
 
-DEV9 CREA, année 2026-2027 · Encadrant : Taha RIDENE
+DEV9 CREA, année 2026-2027 · Encadrant : Taha RIDENE · Auteur : Matis WOSTRY
 
 **Document de synthèse complet (sujet, diagramme de BD, diagramme de classes, tests) : [`docs/`](docs/README.md)**
 

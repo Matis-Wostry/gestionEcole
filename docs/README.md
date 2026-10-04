@@ -1,6 +1,6 @@
 # Document de synthèse — Projet ÉCOLE
 
-**Couche persistance en Java & MySQL** · DEV9 CREA, année 2026-2027 · Encadrant : Taha RIDENE · Auteur : Matis
+**Couche persistance en Java & MySQL** · DEV9 CREA, année 2026-2027 · Encadrant : Taha RIDENE · Auteur : Matis WOSTRY
 
 ---
 
