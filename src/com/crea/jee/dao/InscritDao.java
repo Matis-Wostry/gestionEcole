@@ -8,10 +8,13 @@ import java.util.List;
 
 import com.crea.jee.beans.Inscrit;
 import com.crea.jee.utils.DBAction;
+import com.crea.jee.utils.Validation;
 
 /*
  * Cette classe regroupe les accès en base de données liés à la table inscrit
- * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou -1 en cas d'erreur côté base (connexion impossible ou erreur SQL)
+ * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
+ * -1 = erreur côté base (connexion impossible, erreur SQL, uv ou élève inexistant), -2 = élève déjà inscrit à cette uv,
+ * -3 = données invalides (refusées avant tout accès à la base)
  * Les méthodes de lecture retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
 public class InscritDao {
@@ -33,6 +36,36 @@ public class InscritDao {
 			ps.setString(2, num);
 			result = ps.executeUpdate();
 		} catch (SQLException ex) {
+			System.out.println(ex.getMessage());
+		} finally {
+			DBAction.DBClose();
+		}
+		return result;
+	}
+
+	/*
+	 * inscrit un élève à une uv avec sa note (méthode en plus de la spécification fonctionnelle)
+	 * l'uv et l'élève doivent exister : sinon la clé étrangère fait échouer l'insertion (code -1)
+	 */
+	public static int addInscription(Inscrit nouvelleInscription) {
+		if (!Validation.estValide(nouvelleInscription.getCode(), 100)
+				|| !Validation.estValide(nouvelleInscription.getNum(), 100) || Float.isNaN(nouvelleInscription.getNote())) {
+			return -3;
+		}
+		int result = -1;
+		String req = "INSERT INTO inscrit (code, num, note) VALUES (?, ?, ?)";
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
+		try (PreparedStatement ps = DBAction.getCon().prepareStatement(req)) {
+			ps.setString(1, nouvelleInscription.getCode());
+			ps.setString(2, nouvelleInscription.getNum());
+			ps.setFloat(3, nouvelleInscription.getNote());
+			result = ps.executeUpdate();
+		} catch (SQLException ex) {
+			if (ex.getErrorCode() == 1062) {// l'élève est déjà inscrit à cette uv
+				result = -2;
+			}
 			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();

@@ -23,7 +23,7 @@ import com.crea.jee.wrappers.Wrapper;
 
 /*
  * Tests unitaires de UvDao, contre la base ecole_test (-Ddb.name=ecole_test)
- * UvDao n'a pas de méthode d'ajout : les uv de test sont insérées directement en SQL
+ * Les uv de mise en place sont insérées directement en SQL, pour que les tests des autres méthodes ne dépendent pas de addUv
  * [OK] = cas valide, l'opération doit réussir ; [ERREUR] = cas invalide, le DAO doit refuser ou ne rien trouver
  */
 @DisplayName("UvDao")
@@ -115,6 +115,36 @@ class UvDaoTest {
 
 		assertEquals(-3, UvDao.updateCoordUv("UV_TEST1", "x".repeat(256)));
 		assertEquals("Mr Test", UvDao.getUvByCode("UV_TEST1").getUv().getCoord());
+	}
+
+	@Test
+	@DisplayName("[OK] addUv : une UV ajoutée se retrouve en base avec ses heures et son coordinateur")
+	void addUv_ajouteEtRecuperable() {
+		assertEquals(1, UvDao.addUv(new Uv("UV_TEST1", 30, "Mr Test")));
+
+		Uv uv = UvDao.getUvByCode("UV_TEST1").getUv();
+		assertNotNull(uv);
+		assertEquals(30, uv.getNbh());
+		assertEquals("Mr Test", uv.getCoord());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] addUv : ajouter un code déjà existant est refusé (code -2)")
+	void addUv_codeDejaExistant_retourneMoins2() throws SQLException {
+		ajouterUv("UV_TEST1", 30, "Mr Test");
+
+		assertEquals(-2, UvDao.addUv(new Uv("UV_TEST1", 10, "Autre")));
+	}
+
+	@Test
+	@DisplayName("[ERREUR] addUv : code vide, 0 heure ou plus de 127 heures sont refusés (code -3)")
+	void addUv_donneesInvalides_retourneMoins3() {
+		assertEquals(-3, UvDao.addUv(new Uv("", 30, "Mr Test")));
+		assertEquals(-3, UvDao.addUv(new Uv("UV_TEST2", 0, "Mr Test")));
+		assertEquals(-3, UvDao.addUv(new Uv("UV_TEST3", 200, "Mr Test")));
+
+		assertEquals(Wrapper.NON_TROUVE, UvDao.getUvByCode("UV_TEST2").getCodeResponse());
+		assertEquals(Wrapper.NON_TROUVE, UvDao.getUvByCode("UV_TEST3").getCodeResponse());
 	}
 
 	@Test

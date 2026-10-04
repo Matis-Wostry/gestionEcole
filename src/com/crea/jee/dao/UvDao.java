@@ -15,7 +15,7 @@ import com.crea.jee.wrappers.Wrapper;
 /*
  * Cette classe regroupe les accès en base de données liés à la table uv
  * Les méthodes d'écriture retournent le nombre de lignes modifiées, ou un code d'erreur :
- * -1 = erreur côté base (connexion impossible ou erreur SQL), -3 = données invalides (refusées avant tout accès à la base)
+ * -1 = erreur côté base (connexion impossible ou erreur SQL), -2 = code déjà existant, -3 = données invalides (refusées avant tout accès à la base)
  * Les lectures d'une seule uv retournent un UvWrapper (l'uv + un code réponse, voir Wrapper)
  * Les lectures de listes retournent une liste vide si rien n'est trouvé ou en cas d'erreur
  */
@@ -126,6 +126,34 @@ public class UvDao {
 			ps.setString(2, code);
 			result = ps.executeUpdate();
 		} catch (SQLException ex) {
+			System.out.println(ex.getMessage());
+		} finally {
+			DBAction.DBClose();
+		}
+		return result;
+	}
+
+	// ajoute une nouvelle uv (méthode en plus de la spécification fonctionnelle)
+	public static int addUv(Uv nouvelleUv) {
+		if (!Validation.estValide(nouvelleUv.getCode(), 100) || !Validation.estPositif(nouvelleUv.getNbh())
+				|| !Validation.estDansPlageTinyint(nouvelleUv.getNbh())
+				|| !Validation.longueurValide(nouvelleUv.getCoord(), 255)) {
+			return -3;
+		}
+		int result = -1;
+		String req = "INSERT INTO uv (code, nbh, coord) VALUES (?, ?, ?)";
+		if (DBAction.DBConnexion() != null) {
+			return -1;
+		}
+		try (PreparedStatement ps = DBAction.getCon().prepareStatement(req)) {
+			ps.setString(1, nouvelleUv.getCode());
+			ps.setInt(2, nouvelleUv.getNbh());
+			ps.setString(3, nouvelleUv.getCoord());
+			result = ps.executeUpdate();
+		} catch (SQLException ex) {
+			if (ex.getErrorCode() == 1062) {// la clé existe déjà
+				result = -2;
+			}
 			System.out.println(ex.getMessage());
 		} finally {
 			DBAction.DBClose();

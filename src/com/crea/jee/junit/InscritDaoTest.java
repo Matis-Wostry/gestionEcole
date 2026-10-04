@@ -18,7 +18,8 @@ import com.crea.jee.dao.InscritDao;
 
 /*
  * Tests unitaires de InscritDao, contre la base ecole_test (-Ddb.name=ecole_test)
- * InscritDao n'a pas de méthode d'ajout : uv et inscriptions de test sont insérées directement en SQL
+ * Uv et inscriptions de mise en place sont insérées directement en SQL, pour que les tests des autres méthodes
+ * ne dépendent pas de addInscription
  * [OK] = cas valide, l'opération doit réussir ; [ERREUR] = cas invalide, le DAO doit refuser ou ne rien trouver
  */
 @DisplayName("InscritDao")
@@ -48,6 +49,41 @@ class InscritDaoTest {
 				.filter(i -> code.equals(i.getCode()) && num.equals(i.getNum()))
 				.findFirst()
 				.orElse(null);
+	}
+
+	@Test
+	@DisplayName("[OK] addInscription : l'inscription ajoutée se retrouve en base avec sa note")
+	void addInscription_ajouteEtRecuperable() {
+		assertEquals(1, InscritDao.addInscription(new Inscrit("UV_TEST1", "TEST001", 13.5f)));
+
+		assertEquals(13.5f, trouver("UV_TEST1", "TEST001").getNote(), DELTA);
+	}
+
+	@Test
+	@DisplayName("[ERREUR] addInscription : inscrire deux fois un élève à la même UV est refusé (code -2)")
+	void addInscription_dejaInscrit_retourneMoins2() throws SQLException {
+		inscrire("UV_TEST1", "TEST001", 12f);
+
+		assertEquals(-2, InscritDao.addInscription(new Inscrit("UV_TEST1", "TEST001", 15f)));
+	}
+
+	@Test
+	@DisplayName("[ERREUR] addInscription : code d'UV vide, n° d'élève vide ou note non numérique sont refusés (code -3)")
+	void addInscription_donneesInvalides_retourneMoins3() {
+		assertEquals(-3, InscritDao.addInscription(new Inscrit("", "TEST001", 10f)));
+		assertEquals(-3, InscritDao.addInscription(new Inscrit("UV_TEST1", "", 10f)));
+		assertEquals(-3, InscritDao.addInscription(new Inscrit("UV_TEST1", "TEST001", Float.NaN)));
+
+		assertTrue(InscritDao.getAllInscriptions().isEmpty());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] addInscription : un élève ou une UV inexistants font échouer l'inscription (code -1)")
+	void addInscription_referenceInexistante_retourneMoins1() {
+		assertEquals(-1, InscritDao.addInscription(new Inscrit("UV_TEST1", "INCONNU999", 10f)));
+		assertEquals(-1, InscritDao.addInscription(new Inscrit("UV_INCONNUE", "TEST001", 10f)));
+
+		assertTrue(InscritDao.getAllInscriptions().isEmpty());
 	}
 
 	@Test
