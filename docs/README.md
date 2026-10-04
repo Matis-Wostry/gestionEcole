@@ -122,7 +122,7 @@ erDiagram
 | `ChambreDao.deleteChambreByNo` | détache les élèves rattachés (`eleve.no = NULL`) |
 | `UvDao.deleteUvByCode` | supprime les inscriptions à cette UV |
 
-- **`eleve.no` et `chambre.num` se référencent mutuellement.** Les deux colonnes sont indépendantes : `ChambreDao.updateOccupantChambre` renseigne `chambre.num`, mais aucune méthode de la spécification ne renseigne `eleve.no`.
+- **`eleve.no` et `chambre.num` décrivent le même lien dans les deux sens.** `ChambreDao.updateOccupantChambre` les met à jour ensemble, dans une transaction : l'ancien occupant de la chambre est détaché, l'ancienne chambre du nouvel occupant est libérée (un élève n'occupe qu'une chambre), puis la chambre et l'élève sont reliés. Si la chambre ou l'élève n'existe pas, rien n'est modifié.
 
 ---
 
@@ -452,20 +452,20 @@ Chaque test porte une description qui commence par **[OK]** (cas valide, l'opér
 | Classe de test | Tests | Couverture |
 |---|---|---|
 | `EleveDaoTest` | 22 | toutes les méthodes, suppression en cascade, codes du wrapper |
-| `ChambreDaoTest` | 19 | toutes les méthodes, détachement de l'élève à la suppression, codes du wrapper |
+| `ChambreDaoTest` | 25 | toutes les méthodes, synchronisation chambre ↔ élève, détachement de l'élève à la suppression, codes du wrapper |
 | `LivreDaoTest` | 17 | toutes les méthodes, date de prêt à l'emprunt et au retour, codes du wrapper |
 | `UvDaoTest` | 17 | toutes les méthodes (dont l'ajout), suppression des inscriptions liées, codes du wrapper |
 | `InscritDaoTest` | 11 | toutes les méthodes (dont l'ajout), élève ou UV inexistant |
 | `ValidationTest` | 12 | chaque contrôle, sans base de données |
-| **Sous-total couche persistance** | **98** | |
+| **Sous-total couche persistance** | **104** | |
 | `OngletElevesTest` | 9 | ajout, doublon, saisies invalides, recherche, suppression annulée puis confirmée |
 | `OngletChambresTest` | 13 | ajout, recherche, attribuer et libérer, modifier le prix, filtres, suppression |
 | `OngletLivresTest` | 10 | ajout, recherche, prêt et retour, modification du titre, filtres, suppression |
 | `OngletUvTest` | 7 | ajout, recherche, modification des heures et du coordinateur, filtre, suppression |
 | `OngletInscriptionsTest` | 7 | inscription, doublon, élève ou UV inexistant, modification de la note, suppression |
-| `FenetreEcoleTest` | 4 | onglets présents, suppressions répercutées d'un onglet à l'autre |
-| **Sous-total interface** | **50** | |
-| **Total** | **148** | **148 réussis** |
+| `FenetreEcoleTest` | 5 | onglets présents, suppressions et attributions de chambre répercutées d'un onglet à l'autre |
+| **Sous-total interface** | **51** | |
+| **Total** | **155** | **155 réussis** |
 
 ### Tests de l'interface
 
