@@ -15,20 +15,16 @@
 7. [Blindage des données](#7-blindage-des-données)
 8. [Tests unitaires](#8-tests-unitaires)
 9. [Installation et lancement](#9-installation-et-lancement)
-10. [Limites connues et pistes d'amélioration](#10-limites-connues-et-pistes-damélioration)
 
 ---
 
 ## 1. Sujet
 
-Développer la **couche persistance** (le « Model » du MVC2) d'une application de gestion d'école :
+Créer en Java une application de **gestion d'école** : élèves, chambres, livres, UV et inscriptions.
 
-- concevoir et créer la base **École** sous MySQL à partir d'un script SQL ;
-- écrire une application Java d'accès aux données via **JDBC** :
-  - une classe de **connexion** à la base,
-  - un **bean** par table (classe représentant une ligne de la table),
-  - un **DAO** (*Data Access Object*) par bean, dont les méthodes satisfont la spécification fonctionnelle ;
-- valider les classes par des **tests unitaires**.
+- Les données sont stockées dans une base **MySQL**, créée à partir d'un script SQL.
+- L'application permet de consulter, ajouter, modifier et supprimer ces données.
+- Son bon fonctionnement est vérifié par des **tests unitaires**.
 
 ---
 
@@ -378,18 +374,6 @@ Les méthodes qui lisent **un seul objet** renvoient un **wrapper**, qui envelop
 | `-1` | `Wrapper.ERREUR_BASE` | erreur côté serveur (connexion impossible ou requête en échec) | `null` |
 | `-3` | `Wrapper.DONNEES_INVALIDES` | paramètre invalide (vide, numéro à 0…), refusé sans interroger la base | `null` |
 
-Exemple d'utilisation par un futur contrôleur :
-
-```java
-EleveWrapper resultat = EleveDao.getEleveByNum("AGUE001");
-switch (resultat.getCodeResponse()) {
-    case Wrapper.TROUVE -> afficher(resultat.getEleve());
-    case Wrapper.NON_TROUVE -> afficherErreur("Élève introuvable");
-    case Wrapper.DONNEES_INVALIDES -> afficherErreur("Numéro invalide");
-    default -> afficherErreur("Service indisponible, réessayez plus tard");
-}
-```
-
 ### Écritures (ajout, mise à jour, suppression)
 
 Elles renvoient un `int` :
@@ -443,7 +427,7 @@ Règles appliquées par les DAO :
 
 ### Une base de test séparée
 
-Comme le recommande le cours, les tests ne touchent jamais la base de production :
+Les tests vident et remplissent les tables à chaque exécution. Ils tournent donc sur une base dédiée, pour que les vraies données ne soient jamais modifiées et que chaque test parte toujours d'une base connue :
 
 | Base | Usage | Sélection |
 |---|---|---|
@@ -539,11 +523,3 @@ Une fenêtre s'ouvre, avec un onglet par table : **Élèves, Chambres, Livres, U
 Elle utilise la base `ecole` par défaut ; ajouter `-Ddb.name=ecole_test` dans les *VM options* pour travailler sur la base de test.
 
 Cette application en Swing (inclus dans le JDK, rien à installer) sert à montrer la couche persistance en action. Ce n'est pas le front MVC2 du cours (Servlet + JSP), qui fera l'objet d'un projet séparé.
-
----
-
-## 10. Limites connues et pistes d'amélioration
-
-- **Listes non enveloppées** : une liste vide peut signifier « aucun résultat » comme « erreur ». Un wrapper de liste lèverait l'ambiguïté.
-- **Connexion unique partagée** : `DBAction` garde une seule connexion statique pour toute l'application. Elle ne supportera pas plusieurs utilisateurs simultanés (front web, tests de performance) : il faudra une connexion par requête, ou un pool de connexions.
-- **`eleve.no` et `chambre.num` non synchronisés** : attribuer une chambre via `updateOccupantChambre` ne met pas à jour `eleve.no`.
