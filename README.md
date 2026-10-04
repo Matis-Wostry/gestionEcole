@@ -1,10 +1,20 @@
-# Projet ÉCOLE : couche persistance Java & MySQL
+# Gestion d'école
 
-Couche **Model** (persistance) d'une application de gestion d'école : beans, DAO JDBC, wrappers et tests unitaires JUnit, sur une base MySQL.
+Application Java de gestion d'une école : élèves, chambres, livres, UV et inscriptions.
 
-DEV9 CREA, année 2026-2027 · Encadrant : Taha RIDENE · Auteur : Matis WOSTRY
+Les données sont stockées dans une base MySQL et manipulées en JDBC. Une interface graphique permet de les consulter, d'en ajouter, de les modifier et de les supprimer.
 
-**Document de synthèse complet (sujet, diagramme de BD, diagramme de classes, tests) : [`docs/`](docs/README.md)**
+## Documentation
+
+Le dossier [`docs/`](docs/README.md) contient un README plus détaillé, avec :
+
+- l'**architecture** du projet et le rôle de chaque package ;
+- le **diagramme de la base de données** ;
+- les **diagrammes de classes** (beans, wrappers, DAO) ;
+- la **liste des fonctionnalités** et la méthode qui réalise chacune ;
+- les **codes retour** des DAO et les **règles de contrôle** des données ;
+- le détail des **tests** ;
+- l'**installation** et les commandes de lancement.
 
 ## Démarrage rapide
 
@@ -25,13 +35,6 @@ DEV9 CREA, année 2026-2027 · Encadrant : Taha RIDENE · Auteur : Matis WOSTRY
 4. Lancer l'application de démonstration **depuis la classe `FenetreEcole`** (`src/com/crea/jee/ihm/FenetreEcole.java`) : clic droit sur ce fichier, puis *Run 'FenetreEcole.main()'*. Une fenêtre s'ouvre avec un onglet par table (Élèves, Chambres, Livres, UV, Inscriptions).
 
    > **Important :** `FenetreEcole` est la **seule** classe à lancer, c'est elle qui contient le `main`. Les classes `Onglet…` du même dossier ne sont que des morceaux de la fenêtre : elles n'ont pas de `main` et ne peuvent pas être exécutées seules.
-
-## Choix volontaires
-
-- **Le projet contient à la fois la configuration Eclipse et IntelliJ.** Le projet a été développé sous IntelliJ IDEA (`.idea/`, `GestionEcole.iml`), mais le sujet demande un projet Eclipse. Les fichiers `.project`, `.classpath` et `.settings/` sont donc fournis exprès, pour qu'il s'importe sous Eclipse sans aucune configuration. Ils imposent aussi l'encodage UTF-8, sans lequel Eclipse sous Windows afficherait mal les accents des sources.
-- **L'application de démonstration est en Swing, pas en MVC2.** Elle utilise Swing, inclus dans le JDK, pour montrer la couche persistance derrière une vraie interface sans rien installer. Le front MVC2 du cours (Servlet + JSP) fera l'objet d'un projet séparé.
-- **Deux méthodes s'ajoutent à la spécification** : `UvDao.addUv` et `InscritDao.addInscription`, pour que l'application puisse aussi créer des UV et des inscriptions. Elles suivent les mêmes règles de contrôle et de codes retour que les autres ajouts, et sont couvertes par les tests.
-- **Une base injoignable ne fait jamais planter l'application.** Comme le prévoit le cours (« erreur côté serveur »), les DAO renvoient `-1` pour une écriture, une liste vide pour une lecture de liste, et un wrapper avec le code `-1` pour la lecture d'un objet seul. Le détail des codes est dans le [document de synthèse](docs/README.md#6-codes-retour-et-wrappers).
 
 ## Contenu
 
