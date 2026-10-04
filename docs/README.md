@@ -65,8 +65,9 @@ flowchart LR
 | `com.crea.jee.dao` | `EleveDao`, `ChambreDao`, `LivreDao`, `UvDao`, `InscritDao` : accès aux données |
 | `com.crea.jee.wrappers` | `Wrapper` et `EleveWrapper`, `ChambreWrapper`, `LivreWrapper`, `UvWrapper` : objet + code réponse |
 | `com.crea.jee.utils` | `DBAction` (connexion, fournie par l'encadrant), `Validation` (contrôle des données) |
-| `com.crea.jee.junit` | Tests unitaires JUnit 5, un fichier par DAO, plus `ValidationTest` |
+| `com.crea.jee.junit` | Tests unitaires JUnit 5 : un fichier par DAO, `ValidationTest`, et un fichier par onglet de l'interface |
 | `com.crea.jee.test` | Tests manuels (`main`) qui affichent les résultats dans la console |
+| `com.crea.jee.ihm` | Application de démonstration (Swing) : une fenêtre à onglets qui utilise les DAO |
 
 Toutes les requêtes passent par des `PreparedStatement` : les valeurs saisies ne sont jamais concaténées dans le SQL, ce qui protège contre l'injection SQL.
 
@@ -254,11 +255,13 @@ classDiagram
         +updateCoordUv(String code, String coord)$ int
         +getAllUvs()$ List~Uv~
         +getUvsNbhSuperieur(int valeur)$ List~Uv~
+        +addUv(Uv nouvelleUv)$ int
     }
     class InscritDao {
         +deleteInscription(String code, String num)$ int
         +getAllInscriptions()$ List~Inscrit~
         +updateNoteInscrit(String code, String num, float note)$ int
+        +addInscription(Inscrit nouvelleInscription)$ int
     }
 
     class DBAction {
@@ -292,7 +295,7 @@ Chaque DAO crée les beans de sa table (méthode privée `mapResultSet`) et, pou
 
 ## 5. Couverture de la spécification fonctionnelle
 
-Toutes les fonctionnalités de la spécification sont implémentées, y compris les parties optionnelles (UV et Inscrit).
+Toutes les fonctionnalités de la spécification sont implémentées, y compris les parties optionnelles (UV et Inscrit). Deux ajouts **en plus de la spécification**, marqués *(en plus)*, complètent les UV et les inscriptions pour l'application de démonstration.
 
 ### Élève (indispensable)
 
@@ -345,6 +348,7 @@ Toutes les fonctionnalités de la spécification sont implémentées, y compris 
 | Mettre à jour le coordinateur d'une UV | `UvDao.updateCoordUv` |
 | Récupérer la liste de toutes les UV | `UvDao.getAllUvs` |
 | Récupérer les UV au-dessus d'un nombre d'heures | `UvDao.getUvsNbhSuperieur` |
+| *(en plus)* Ajouter une UV | `UvDao.addUv` |
 
 ### Inscrit (optionnel)
 
@@ -353,6 +357,7 @@ Toutes les fonctionnalités de la spécification sont implémentées, y compris 
 | Supprimer l'inscription d'un élève à une UV | `InscritDao.deleteInscription` |
 | Récupérer toutes les inscriptions | `InscritDao.getAllInscriptions` |
 | Mettre à jour la note d'un élève à une UV | `InscritDao.updateNoteInscrit` |
+| *(en plus)* Inscrire un élève à une UV | `InscritDao.addInscription` (l'UV et l'élève doivent exister, sinon code `-1`) |
 
 ---
 
@@ -430,6 +435,7 @@ Règles appliquées par les DAO :
 | Numéro et prix de chambre | strictement positifs |
 | Titre de livre | renseigné, 100 caractères maximum |
 | Coordinateur d'UV | 255 caractères maximum |
+| Inscription | code d'UV et numéro d'élève renseignés, note numérique |
 
 ---
 
@@ -464,10 +470,26 @@ Chaque test porte une description qui commence par **[OK]** (cas valide, l'opér
 | `EleveDaoTest` | 22 | toutes les méthodes, suppression en cascade, codes du wrapper |
 | `ChambreDaoTest` | 19 | toutes les méthodes, détachement de l'élève à la suppression, codes du wrapper |
 | `LivreDaoTest` | 17 | toutes les méthodes, date de prêt à l'emprunt et au retour, codes du wrapper |
-| `UvDaoTest` | 14 | toutes les méthodes, suppression des inscriptions liées, codes du wrapper |
-| `InscritDaoTest` | 7 | toutes les méthodes |
+| `UvDaoTest` | 17 | toutes les méthodes (dont l'ajout), suppression des inscriptions liées, codes du wrapper |
+| `InscritDaoTest` | 11 | toutes les méthodes (dont l'ajout), élève ou UV inexistant |
 | `ValidationTest` | 12 | chaque contrôle, sans base de données |
-| **Total** | **91** | **91 réussis** |
+| **Sous-total couche persistance** | **98** | |
+| `OngletElevesTest` | 9 | ajout, doublon, saisies invalides, recherche, suppression annulée puis confirmée |
+| `OngletChambresTest` | 13 | ajout, recherche, attribuer et libérer, modifier le prix, filtres, suppression |
+| `OngletLivresTest` | 10 | ajout, recherche, prêt et retour, modification du titre, filtres, suppression |
+| `OngletUvTest` | 7 | ajout, recherche, modification des heures et du coordinateur, filtre, suppression |
+| `OngletInscriptionsTest` | 7 | inscription, doublon, élève ou UV inexistant, modification de la note, suppression |
+| `FenetreEcoleTest` | 4 | onglets présents, suppressions répercutées d'un onglet à l'autre |
+| **Sous-total interface** | **50** | |
+| **Total** | **148** | **148 réussis** |
+
+### Tests de l'interface
+
+Les tests `Onglet…Test` et `FenetreEcoleTest` ouvrent la vraie fenêtre (hors de l'écran) et agissent comme un utilisateur : ils remplissent les champs, déclenchent les boutons, répondent « Oui » ou « Non » aux confirmations, puis vérifient le message de la barre d'état, le contenu du tableau et la ligne sélectionnée.
+
+- Les onglets et leurs actions ne sont pas publics : les tests y accèdent par réflexion (classe `OutilsIhm`), sans rien modifier dans le code de l'interface.
+- Ils ont besoin d'un écran : sur une machine sans affichage (serveur d'intégration continue), ils sont automatiquement ignorés au lieu d'échouer.
+- Ils sont plus lents que les tests des DAO : la suite complète prend un peu plus d'une minute.
 
 ---
 
@@ -508,11 +530,20 @@ javac -encoding UTF-8 -cp "lib/*" -d out $(find src -name "*.java")
 java -Ddb.name=ecole_test -cp "lib/*;out" org.junit.platform.console.ConsoleLauncher execute --select-package=com.crea.jee.junit --details=tree
 ```
 
+### Lancer l'application de démonstration
+
+L'application se lance **uniquement depuis la classe `com.crea.jee.ihm.FenetreEcole`** : clic droit sur `FenetreEcole.java`, puis *Run 'FenetreEcole.main()'*. C'est la seule classe du package à contenir un `main` ; les classes `Onglet…` sont des parties de la fenêtre et ne se lancent pas seules.
+
+Une fenêtre s'ouvre, avec un onglet par table : **Élèves, Chambres, Livres, UV, Inscriptions**. Chaque onglet permet de rechercher, filtrer, ajouter, modifier et supprimer, et affiche dans sa barre d'état le message et le code retour du DAO.
+
+Elle utilise la base `ecole` par défaut ; ajouter `-Ddb.name=ecole_test` dans les *VM options* pour travailler sur la base de test.
+
+Cette application en Swing (inclus dans le JDK, rien à installer) sert à montrer la couche persistance en action. Ce n'est pas le front MVC2 du cours (Servlet + JSP), qui fera l'objet d'un projet séparé.
+
 ---
 
 ## 10. Limites connues et pistes d'amélioration
 
 - **Listes non enveloppées** : une liste vide peut signifier « aucun résultat » comme « erreur ». Un wrapper de liste lèverait l'ambiguïté.
 - **Connexion unique partagée** : `DBAction` garde une seule connexion statique pour toute l'application. Elle ne supportera pas plusieurs utilisateurs simultanés (front web, tests de performance) : il faudra une connexion par requête, ou un pool de connexions.
-- **Pas d'ajout d'UV ni d'inscription** : non demandé par la spécification. Les tests insèrent ces données directement en SQL.
 - **`eleve.no` et `chambre.num` non synchronisés** : attribuer une chambre via `updateOccupantChambre` ne met pas à jour `eleve.no`.
