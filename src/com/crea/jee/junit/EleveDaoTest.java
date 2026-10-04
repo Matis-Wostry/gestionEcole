@@ -174,14 +174,12 @@ class EleveDaoTest {
 		assertEquals(Wrapper.DONNEES_INVALIDES, EleveDao.getEleveByNo(0).getCodeResponse());
 	}
 
-	// eleve.no n'est modifiable par aucune méthode publique d'EleveDao : on le positionne directement en SQL
 	@Test
 	@DisplayName("[OK] getEleveByNo : renvoie l'élève rattaché à la chambre demandée")
-	void getEleveByNo_retourneLOccupant() throws SQLException {
+	void getEleveByNo_retourneLOccupant() {
 		ChambreDao.addChambre(new Chambre(999, null, 100f));
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
-
-		BaseDeTest.executer("UPDATE eleve SET no = ? WHERE num = ?", 999, "TEST001");
+		ChambreDao.updateOccupantChambre(999, "TEST001");
 
 		Eleve occupant = EleveDao.getEleveByNo(999).getEleve();
 

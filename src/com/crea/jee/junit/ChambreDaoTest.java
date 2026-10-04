@@ -114,6 +114,99 @@ class ChambreDaoTest {
 		assertNull(ChambreDao.getChambreByNo(1).getChambre().getNum());
 	}
 
+	// numéro de chambre enregistré côté élève (eleve.no), 0 s'il n'en a pas
+	private static int chambreDe(String num) {
+		return EleveDao.getEleveByNum(num).getEleve().getNo();
+	}
+
+	private static String occupantDe(int no) {
+		return ChambreDao.getChambreByNo(no).getChambre().getNum();
+	}
+
+	@Test
+	@DisplayName("[OK] updateOccupantChambre : attribuer une chambre la renseigne aussi côté élève (eleve.no)")
+	void updateOccupantChambre_renseigneAussiEleveNo() {
+		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+
+		assertEquals(1, ChambreDao.updateOccupantChambre(1, "TEST001"));
+
+		assertEquals("TEST001", occupantDe(1));
+		assertEquals(1, chambreDe("TEST001"));
+		assertEquals("TEST001", EleveDao.getEleveByNo(1).getEleve().getNum());
+	}
+
+	@Test
+	@DisplayName("[OK] updateOccupantChambre : libérer une chambre retire aussi la chambre de l'élève")
+	void updateOccupantChambre_libererVideAussiEleveNo() {
+		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+		ChambreDao.updateOccupantChambre(1, "TEST001");
+
+		assertEquals(1, ChambreDao.updateOccupantChambre(1, null));
+
+		assertNull(occupantDe(1));
+		assertEquals(0, chambreDe("TEST001"));
+		assertEquals(Wrapper.NON_TROUVE, EleveDao.getEleveByNo(1).getCodeResponse());
+	}
+
+	@Test
+	@DisplayName("[OK] updateOccupantChambre : donner une chambre occupée à un autre élève détache l'ancien occupant")
+	void updateOccupantChambre_nouvelOccupantDetacheLAncien() {
+		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+		EleveDao.addEleve(new Eleve("TEST002", 0, "Testeur Deux", 30, "Adresse"));
+		ChambreDao.updateOccupantChambre(1, "TEST001");
+
+		assertEquals(1, ChambreDao.updateOccupantChambre(1, "TEST002"));
+
+		assertEquals("TEST002", occupantDe(1));
+		assertEquals(1, chambreDe("TEST002"));
+		assertEquals(0, chambreDe("TEST001"));
+	}
+
+	@Test
+	@DisplayName("[OK] updateOccupantChambre : changer un élève de chambre libère son ancienne chambre")
+	void updateOccupantChambre_changementDeChambreLibereLAncienne() {
+		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
+		ChambreDao.addChambre(new Chambre(2, null, 200f));
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+		ChambreDao.updateOccupantChambre(1, "TEST001");
+
+		assertEquals(1, ChambreDao.updateOccupantChambre(2, "TEST001"));
+
+		assertNull(occupantDe(1));
+		assertEquals("TEST001", occupantDe(2));
+		assertEquals(2, chambreDe("TEST001"));
+		assertEquals(2, ChambreDao.getChambreByOccupant("TEST001").getChambre().getNo());
+	}
+
+	@Test
+	@DisplayName("[ERREUR] updateOccupantChambre : chambre inexistante (code 0), l'élève garde sa chambre actuelle")
+	void updateOccupantChambre_chambreInexistante_rienNeChange() {
+		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+		ChambreDao.updateOccupantChambre(1, "TEST001");
+
+		assertEquals(0, ChambreDao.updateOccupantChambre(99, "TEST001"));
+
+		assertEquals("TEST001", occupantDe(1));
+		assertEquals(1, chambreDe("TEST001"));
+	}
+
+	@Test
+	@DisplayName("[ERREUR] updateOccupantChambre : élève inexistant (code -1), l'occupant actuel reste en place")
+	void updateOccupantChambre_eleveInexistant_occupantConserve() {
+		ChambreDao.addChambre(new Chambre(1, null, 350.25f));
+		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
+		ChambreDao.updateOccupantChambre(1, "TEST001");
+
+		assertEquals(-1, ChambreDao.updateOccupantChambre(1, "INCONNU999"));
+
+		assertEquals("TEST001", occupantDe(1));
+		assertEquals(1, chambreDe("TEST001"));
+	}
+
 	@Test
 	@DisplayName("[OK] getChambreByOccupant : renvoie la chambre occupée par l'élève")
 	void getChambreByOccupant_retourneLaChambre() {
@@ -210,10 +303,10 @@ class ChambreDaoTest {
 
 	@Test
 	@DisplayName("[OK] deleteChambreByNo : l'élève rattaché est détaché de la chambre au lieu de bloquer la suppression")
-	void deleteChambreByNo_detacheLEleveRattache() throws SQLException {
+	void deleteChambreByNo_detacheLEleveRattache() {
 		ChambreDao.addChambre(new Chambre(1, null, 150f));
 		EleveDao.addEleve(new Eleve("TEST001", 0, "Testeur Un", 25, "Adresse"));
-		BaseDeTest.executer("UPDATE eleve SET no = ? WHERE num = ?", 1, "TEST001");
+		ChambreDao.updateOccupantChambre(1, "TEST001");
 
 		assertEquals(1, ChambreDao.deleteChambreByNo(1));
 

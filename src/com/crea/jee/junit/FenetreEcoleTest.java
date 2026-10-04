@@ -113,6 +113,25 @@ class FenetreEcoleTest {
 	}
 
 	@Test
+	@DisplayName("[OK] Attribuer puis libérer une chambre : la colonne « Chambre » de l'onglet Élèves suit")
+	void attributionChambre_visibleDansEleves() throws Exception {
+		EleveDao.addEleve(new Eleve("TEST1", 0, "Alice Test", 20, "Adresse"));
+		ChambreDao.addChambre(new Chambre(7, null, 300f));
+		fenetre = OutilsIhm.ouvrir();
+
+		Object chambres = onglet(fenetre, CHAMBRES);
+		selectionner(chambres, 7);
+		OutilsIhm.saisir(chambres, "champOccupant", "TEST1");
+		cliquer(chambres, "attribuer");
+		assertEquals("7", valeur(onglet(fenetre, ELEVES), "TEST1", 4));
+
+		chambres = onglet(fenetre, CHAMBRES);
+		selectionner(chambres, 7);
+		cliquer(chambres, "liberer");
+		assertEquals("—", valeur(onglet(fenetre, ELEVES), "TEST1", 4));
+	}
+
+	@Test
 	@DisplayName("[OK] Un élève ajouté dans l'onglet Élèves peut aussitôt recevoir une chambre dans l'onglet Chambres")
 	void ajoutEleve_utilisableDansChambres() throws Exception {
 		ChambreDao.addChambre(new Chambre(1, null, 300f));

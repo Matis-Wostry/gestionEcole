@@ -115,17 +115,59 @@ public class ChambreDao {
 		return result;
 	}
 
-	// modifie l'occupant d'une chambre identifiée par son numéro (num = null pour la libérer)
+	/*
+	 * modifie l'occupant d'une chambre identifiée par son numéro (num = null pour la libérer)
+	 * chambre.num et eleve.no décrivent le même lien dans les deux sens : ils sont mis à jour ensemble,
+	 * dans une seule transaction, pour qu'une chambre et son élève restent toujours d'accord.
+	 * L'ancien occupant de la chambre est détaché, l'ancienne chambre du nouvel occupant est libérée
+	 * (un élève n'occupe qu'une chambre), puis la chambre et l'élève sont reliés.
+	 * Chambre inexistante (0) ou élève inexistant (-1) : aucune modification n'est appliquée.
+	 */
 	public static int updateOccupantChambre(int no, String num) {
 		int result = -1;
-		String request = "UPDATE chambre SET num = ? WHERE no = ?";
 		if (DBAction.DBConnexion() != null) {
 			return -1;
 		}
-		try (PreparedStatement ps = DBAction.getCon().prepareStatement(request)) {
-			ps.setString(1, num);
-			ps.setInt(2, no);
-			result = ps.executeUpdate();
+		try {
+			DBAction.getCon().setAutoCommit(false);
+			try (PreparedStatement detacheAncienOccupant = DBAction.getCon()
+					.prepareStatement("UPDATE eleve SET no = NULL WHERE no = ?");
+					PreparedStatement libereAncienneChambre = DBAction.getCon()
+							.prepareStatement("UPDATE chambre SET num = NULL WHERE num = ? AND no <> ?");
+					PreparedStatement relieChambre = DBAction.getCon()
+							.prepareStatement("UPDATE chambre SET num = ? WHERE no = ?");
+					PreparedStatement relieEleve = DBAction.getCon()
+							.prepareStatement("UPDATE eleve SET no = ? WHERE num = ?")) {
+				detacheAncienOccupant.setInt(1, no);
+				detacheAncienOccupant.executeUpdate();
+
+				if (num != null) {
+					libereAncienneChambre.setString(1, num);
+					libereAncienneChambre.setInt(2, no);
+					libereAncienneChambre.executeUpdate();
+				}
+
+				relieChambre.setString(1, num);
+				relieChambre.setInt(2, no);
+				result = relieChambre.executeUpdate();
+
+				if (result == 0) {
+					DBAction.getCon().rollback();
+				} else {
+					if (num != null) {
+						relieEleve.setInt(1, no);
+						relieEleve.setString(2, num);
+						relieEleve.executeUpdate();
+					}
+					DBAction.getCon().commit();
+				}
+			} catch (SQLException ex) {
+				result = -1;
+				DBAction.getCon().rollback();
+				System.out.println(ex.getMessage());
+			} finally {
+				DBAction.getCon().setAutoCommit(true);
+			}
 		} catch (SQLException ex) {
 			System.out.println(ex.getMessage());
 		} finally {
